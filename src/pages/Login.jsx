@@ -78,11 +78,10 @@ const handleSubmit = (e) => {
                         <h1>RentStyle</h1>
                         <p>
                         Alquila lo que necesitas, cuando lo necesitas.
-                        Moda, tecnología y más sin el compromiso de comprar.
                         </p>
                         <ul>
                         <li>✦ Catálogo actualizado</li>
-                        <li>✦ Reservas flexibles</li>
+                        <li>✦ Alquiler flexible</li>
                         <li>✦ Cancelación sin cargos</li>
                         </ul>
                     </div>

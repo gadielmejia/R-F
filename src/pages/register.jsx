@@ -205,10 +205,10 @@ export default function Register() {
         <div className="register-left">
           <span className="register-welcome">BIENVENIDO A</span>
           <h1>RentStyle</h1>
-          <p>Alquila lo que necesitas, cuando lo necesitas. Moda, tecnología y más sin el compromiso de comprar.</p>
+          <p>Alquila lo que necesitas, cuando lo necesitas</p>
           <ul>
             <li>✦ Catálogo actualizado</li>
-            <li>✦ Reservas flexibles</li>
+            <li>✦ Alquiler flexible</li>
             <li>✦ Cancelación sin cargos</li>
           </ul>
         </div>
