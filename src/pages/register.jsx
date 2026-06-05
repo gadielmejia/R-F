@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback } from 'react';
-import Header from '../components/Header';
 import Footer from '../components/Footer';
 import '../styles/register.css';
 
@@ -17,7 +16,7 @@ async function hashPassword(pw) {
 
 function measureStrength(pw) {
   let score = 0;
-  if (pw.length >= 8)  score++;
+  if (pw.length >= 1)  score++;
   if (pw.length >= 12) score++;
   if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
   if (/\d/.test(pw))   score++;
@@ -187,8 +186,7 @@ export default function Register() {
 
   return (
     <>
-      <Header />
-
+    
       <nav className="register-nav">
         <div className="register-nav-inner">
           <h2 className="register-logo">RentStyle</h2>
