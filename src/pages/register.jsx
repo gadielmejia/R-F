@@ -16,7 +16,7 @@ async function hashPassword(pw) {
 
 function measureStrength(pw) {
   let score = 0;
-  if (pw.length >= 1)  score++;
+  if (pw.length >= 8)  score++;
   if (pw.length >= 12) score++;
   if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
   if (/\d/.test(pw))   score++;
@@ -186,7 +186,6 @@ export default function Register() {
 
   return (
     <>
-    
       <nav className="register-nav">
         <div className="register-nav-inner">
           <h2 className="register-logo">RentStyle</h2>
@@ -205,10 +204,10 @@ export default function Register() {
         <div className="register-left">
           <span className="register-welcome">BIENVENIDO A</span>
           <h1>RentStyle</h1>
-          <p>Alquila lo que necesitas, cuando lo necesitas</p>
+          <p>Alquila lo que necesitas, cuando lo necesitas. Moda, tecnología y más sin el compromiso de comprar.</p>
           <ul>
             <li>✦ Catálogo actualizado</li>
-            <li>✦ Alquiler flexible</li>
+            <li>✦ Reservas flexibles</li>
             <li>✦ Cancelación sin cargos</li>
           </ul>
         </div>
@@ -223,7 +222,7 @@ export default function Register() {
                 <label htmlFor="name">Nombre completo</label>
                 <div className="input-wrapper">
                   <span className="input-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                     </svg>
                   </span>
@@ -238,7 +237,7 @@ export default function Register() {
                 <label htmlFor="email">Correo electrónico</label>
                 <div className="input-wrapper">
                   <span className="input-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/>
                     </svg>
                   </span>
@@ -253,7 +252,7 @@ export default function Register() {
                 <label htmlFor="password">Contraseña</label>
                 <div className="input-wrapper">
                   <span className="input-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
                   </span>
@@ -281,7 +280,7 @@ export default function Register() {
                 <label htmlFor="confirm">Confirmar contraseña</label>
                 <div className="input-wrapper">
                   <span className="input-icon">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="m9 12 2 2 4-4"/><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                     </svg>
                   </span>

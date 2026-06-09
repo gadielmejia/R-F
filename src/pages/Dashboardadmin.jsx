@@ -42,7 +42,7 @@ function DashboardAdmin() {
       ];
     const storedHistory = JSON.parse(localStorage.getItem("history")) || [];
 
-    setProducts(storedProducts);
+    setProducts(storedProducts);            
     setUsers(storedUsers);
     setHistory(storedHistory);
   }, []);
