@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import Header from "./Header";
 
-function Nav() {
+function NavAdmin() {
   return (
     <nav className="app-nav">
       <div className="nav-inner">
@@ -18,4 +18,4 @@ function Nav() {
   );
 }
 
-export default Nav;
+export default NavAdmin;
