@@ -8,6 +8,16 @@ function DashboardAdmin() {
   const [users, setUsers] = useState([]);
   const [history, setHistory] = useState([]);
 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+    if (!currentUser || currentUser.role !== "admin") {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
+
   // ── Búsqueda ──────────────────────────────────────────────
   const [userSearch, setUserSearch] = useState("");
 
@@ -28,8 +38,6 @@ function DashboardAdmin() {
 
   // ── Sidebar historial ─────────────────────────────────────
   const [historialOpen, setHistorialOpen] = useState(false);
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     const storedProducts =
@@ -149,26 +157,31 @@ function DashboardAdmin() {
   );
 
   const logout = () => {
+    localStorage.removeItem("currentUser");
     localStorage.removeItem("role");
     localStorage.removeItem("email");
     localStorage.removeItem("name");
-    localStorage.removeItem("currentUser");
-    navigate("/login");
+    navigate("/login", { replace: true });
   };
 
   const goToProfile = () => navigate("/profile");
 
   return (
     <>
-      <nav className="app-nav">
+        <nav className="app-nav">
         <div className="nav-inner">
           <Link to="" className="brand">RentStyle</Link>
-          <div className="nav-actions">
-            <button className="profile-btn" onClick={goToProfile}>Mi Perfil</button>
-            <button onClick={logout}>Cerrar sesión</button>
-          </div>
+        
+        <div className="nav-actions">
+          <button onClick={() => {}}>Tema</button>
+          <button onClick={() => {}}>Gestion de productos</button>
+          <button onClick={() => {}}>Gestion de usuarios</button>
+          <button onClick={() => {}}>Inventario</button>
+          <button onClick={logout}>Cerrar sesión</button>
         </div>
-      </nav>
+      </div>
+    </nav>
+
 
       <div className="dashboard-container">
         <div className="dashboard-header">
