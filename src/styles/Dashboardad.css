@@ -22,6 +22,32 @@
     font-size:18px;
 }
 
+.dashboard-buttons-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:30px;
+}
+
+.dashboard-button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:14px 22px;
+    border-radius:14px;
+    background:var(--primary-dark);
+    color:white;
+    text-decoration:none;
+    font-weight:700;
+    border:1px solid rgba(255,255,255,0.08);
+    transition:transform .22s ease, background .22s ease;
+}
+
+.dashboard-button:hover{
+    background:var(--primary);
+    transform:translateY(-2px);
+}
+
 /* ===== STATS ===== */
 
 .stats-grid{
