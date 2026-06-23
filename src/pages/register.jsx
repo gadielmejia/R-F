@@ -50,6 +50,40 @@ export default function Register() {
   const avatarInputRef = useRef(null);
   const toastTimer     = useRef(null);
 
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  const ok = [validateName(), validateEmail(), validatePassword(), validateConfirm(), validateTerms()].every(Boolean);
+  if (!ok) return;
+  setLoading(true);
+  try {
+    const passwordHash = await hashPassword(formData.password);
+
+    const res = await fetch('/api/usuarios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre:     formData.name.trim(),
+        correo:     formData.email.trim().toLowerCase(),
+        Contrasena: passwordHash,
+        documento:  formData.email.trim().toLowerCase(),
+        idRol:      2,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(data.message || 'Error al crear la cuenta.', 'error');
+      return;
+    }
+    showToast('¡Cuenta creada exitosamente! Redirigiendo…', 'success');
+    setTimeout(() => { window.location.href = '/login'; }, 2000);
+  } catch (err) {
+    showToast('Error de conexión con el servidor.', 'error');
+  } finally {
+    setLoading(false);
+  }
+};
+  
   const showToast = useCallback((msg, type = 'success') => {
     clearTimeout(toastTimer.current);
     setToast({ show: true, msg, type });
@@ -138,30 +172,7 @@ export default function Register() {
     handleAvatarFile(e.dataTransfer?.files?.[0]);
   }, [handleAvatarFile]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const ok = [validateName(), validateEmail(), validatePassword(), validateConfirm(), validateTerms()].every(Boolean);
-    if (!ok) return;
-    setLoading(true);
-    try {
-      const passwordHash = await hashPassword(formData.password);
-      const payload = {
-        fullName: formData.name.trim(),
-        email:    formData.email.trim().toLowerCase(),
-        passwordHash,
-        role: 'cliente', active: true, createdAt: new Date().toISOString(),
-      };
-      await new Promise(res => setTimeout(res, 1400));
-      console.info('[RentStyle] Registro OK →', payload);
-      showToast('¡Cuenta creada exitosamente! Redirigiendo…', 'success');
-      setTimeout(() => { window.location.href = '/login'; }, 2000);
-    } catch (err) {
-      console.error('[RentStyle] Error en registro:', err);
-      showToast('Ocurrió un error. Intenta de nuevo.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   const fieldClass = (name) => {
     if (errors[name])     return 'field-group has-error';

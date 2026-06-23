@@ -33,29 +33,35 @@ function Login() {
         name: "Stiven"
     }
 ];
-const handleSubmit = (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
-  const user = users.find(
-    (u) =>
-      u.email.toLowerCase() === email.toLowerCase() &&
-      u.password === password
-  );
-  if (!user) {
-    alert("Correo o contraseña incorrectos");
-    return;
-  }
-  localStorage.setItem(
-    "currentUser",
-    JSON.stringify(user)
-  );
-  console.log("Usuario guardado:", user);
-  if (user.role === "admin") {
-    window.location.href = "/dashboardadmin";
-  } else {
-    window.location.href = "/dashboarduser";
+  try {
+    const data = new TextEncoder().encode(password);
+    const hashBuf = await crypto.subtle.digest('SHA-256', data);
+    const passwordHash = Array.from(new Uint8Array(hashBuf))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ correo: email, Contrasena: passwordHash }),
+    });
+    const data2 = await res.json();
+    if (!res.ok) {
+      alert(data2.message || 'Credenciales incorrectas');
+      return;
+    }
+    localStorage.setItem('currentUser', JSON.stringify(data2.data));
+    if (data2.data.rol_nombre === 'admin') {
+      window.location.href = '/dashboardadmin';
+    } else {
+      window.location.href = '/dashboarduser';
+    }
+  } catch (err) {
+    alert('Error de conexión con el servidor');
   }
 };
-
     return (
      <>
            <nav className="login-nav">
