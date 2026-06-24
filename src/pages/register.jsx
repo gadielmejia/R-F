@@ -66,7 +66,6 @@ export default function Register() {
         correo:     formData.email.trim().toLowerCase(),
         Contrasena: passwordHash,
         documento:  formData.email.trim().toLowerCase(),
-        idRol:      2,
       }),
     });
 

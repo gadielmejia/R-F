@@ -34,37 +34,37 @@ function Login() {
     }
 ];
 const handleSubmit = async (e) => {
-  e.preventDefault();
-  try {
+    e.preventDefault();
+    try {
     const data = new TextEncoder().encode(password);
     const hashBuf = await crypto.subtle.digest('SHA-256', data);
     const passwordHash = Array.from(new Uint8Array(hashBuf))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
 
     const res = await fetch('/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ correo: email, Contrasena: passwordHash }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo: email, Contrasena: passwordHash }),
     });
     const data2 = await res.json();
     if (!res.ok) {
-      alert(data2.message || 'Credenciales incorrectas');
-      return;
+        alert(data2.message || 'Credenciales incorrectas');
+        return;
     }
     localStorage.setItem('currentUser', JSON.stringify(data2.data));
     if (data2.data.rol_nombre === 'admin') {
-      window.location.href = '/dashboardadmin';
+        window.location.href = '/dashboardadmin';
     } else {
-      window.location.href = '/dashboarduser';
+        window.location.href = '/dashboarduser';
     }
-  } catch (err) {
+    } catch (err) {
     alert('Error de conexión con el servidor');
-  }
+    }
 };
     return (
-     <>
-           <nav className="login-nav">
+        <>
+            <nav className="login-nav">
                 <div className="login-nav-inner">
 
                 <h2 className="login-logo">RentStyle</h2>
