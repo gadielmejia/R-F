@@ -8,10 +8,11 @@ function DashboardUser() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("currentUser"));
+    const user = JSON.parse(localStorage.getItem("currentUser") || "null");
+    const role = user?.role || (user?.rol_nombre === "admin" ? "admin" : user?.rol_nombre === "usuario" ? "user" : null);
 
-    if (!user || user.role !== "user") {
-      navigate("/login");
+    if (!user || role !== "user") {
+      navigate("/login", { replace: true });
     }
   }, [navigate]);
 

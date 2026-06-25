@@ -3,78 +3,165 @@ import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import "../styles/Dashboardad.css";
 
+const emptyForm = (roleId = "") => ({
+  nombre: "",
+  documento: "",
+  correo: "",
+  telefono: "",
+  Contrasena: "",
+  idRol: roleId,
+});
+
 function UsersAdmin() {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
-  const [history, setHistory] = useState([]);
-  const [userForm, setUserForm] = useState({ name: "", email: "" });
-  const [nameError, setNameError] = useState("");
+  const [roles, setRoles] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [userForm, setUserForm] = useState(emptyForm());
   const [editingUser, setEditingUser] = useState(null);
 
   useEffect(() => {
-    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-    if (!currentUser || currentUser.role !== "admin") {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+    const role = currentUser?.role || (currentUser?.rol_nombre === "admin" ? "admin" : currentUser?.rol_nombre === "usuario" ? "user" : null);
+
+    if (!currentUser || role !== "admin") {
       navigate("/login", { replace: true });
       return;
     }
 
-    const storedUsers = JSON.parse(localStorage.getItem("users")) || [
-      { id: 1, name: "Alejandra Ramirez", email: "aleja@rentstyle.com" },
-    ];
-    const storedHistory = JSON.parse(localStorage.getItem("history")) || [];
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [rolesResponse, usersResponse] = await Promise.all([
+          fetch("/api/roles"),
+          fetch("/api/usuarios"),
+        ]);
 
-    setUsers(storedUsers);
-    setHistory(storedHistory);
+        const rolesData = await rolesResponse.json();
+        const usersData = await usersResponse.json();
+
+        if (rolesResponse.ok) {
+          const roleList = rolesData.data || [];
+          setRoles(roleList);
+          setUserForm((prev) => ({ ...prev, idRol: prev.idRol || String(roleList[0]?.idRol || "") }));
+        }
+
+        if (usersResponse.ok) {
+          setUsers(usersData.data || []);
+        }
+      } catch (error) {
+        console.error(error);
+        setFormError("No se pudieron cargar los usuarios.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, [navigate]);
 
-  const saveData = (newUsers, newHistory) => {
-    localStorage.setItem("users", JSON.stringify(newUsers));
-    localStorage.setItem("history", JSON.stringify(newHistory));
-  };
-
-  const handleNameChange = (e) => {
-    const value = e.target.value;
-    const invalidChar = /[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/;
-    if (invalidChar.test(value)) {
-      setNameError("El nombre no puede contener números ni signos especiales.");
-    } else {
-      setNameError("");
+  const handleCreateUser = async (e) => {
+    e.preventDefault();
+    if (!userForm.nombre.trim() || !userForm.correo.trim() || !userForm.Contrasena) {
+      setFormError("Completa nombre, correo y contraseña.");
+      return;
     }
-    const cleaned = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]/g, "");
-    setUserForm({ ...userForm, name: cleaned });
+
+    try {
+      setLoading(true);
+      setFormError("");
+      const payload = {
+        nombre: userForm.nombre.trim(),
+        correo: userForm.correo.trim().toLowerCase(),
+        Contrasena: userForm.Contrasena,
+        telefono: userForm.telefono.trim(),
+        idRol: userForm.idRol ? Number(userForm.idRol) : undefined,
+      };
+
+      if (userForm.documento.trim()) {
+        payload.documento = userForm.documento.trim();
+      }
+
+      const response = await fetch("/api/usuarios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "No se pudo crear el usuario.");
+      }
+
+      setUsers((prev) => [data.data, ...prev]);
+      setUserForm(emptyForm(roles[0]?.idRol?.toString() || ""));
+    } catch (error) {
+      setFormError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const addUser = (e) => {
+  const handleDeleteUser = async (id) => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/usuarios/${id}`, { method: "DELETE" });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "No se pudo eliminar el usuario.");
+      }
+      setUsers((prev) => prev.filter((user) => user.idUsuario !== id));
+    } catch (error) {
+      setFormError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateUser = async (e) => {
     e.preventDefault();
-    if (nameError) return;
-    const newUser = { id: Date.now(), name: userForm.name, email: userForm.email };
-    const updatedUsers = [...users, newUser];
-    const updatedHistory = [`Usuario agregado: ${newUser.name}`, ...history];
-    setUsers(updatedUsers);
-    setHistory(updatedHistory);
-    saveData(updatedUsers, updatedHistory);
-    setUserForm({ name: "", email: "" });
-  };
+    if (!editingUser?.nombre?.trim() || !editingUser?.correo?.trim()) {
+      setFormError("Completa nombre y correo antes de guardar.");
+      return;
+    }
 
-  const deleteUser = (id) => {
-    const target = users.find((u) => u.id === id);
-    const updatedUsers = users.filter((u) => u.id !== id);
-    const updatedHistory = [`Usuario eliminado: ${target?.name || "desconocido"} (${target?.email || ""})`, ...history];
-    setUsers(updatedUsers);
-    setHistory(updatedHistory);
-    saveData(updatedUsers, updatedHistory);
-  };
+    try {
+      setLoading(true);
+      setFormError("");
+      const payload = {
+        nombre: editingUser.nombre.trim(),
+        correo: editingUser.correo.trim().toLowerCase(),
+        telefono: editingUser.telefono?.trim() || "",
+        idRol: Number(editingUser.idRol),
+      };
 
-  const saveEditUser = (e) => {
-    e.preventDefault();
-    const updatedUsers = users.map((u) =>
-      u.id === editingUser.id ? { ...u, name: editingUser.name, email: editingUser.email } : u
-    );
-    const updatedHistory = [`Usuario editado: ${editingUser.name} (${editingUser.email})`, ...history];
-    setUsers(updatedUsers);
-    setHistory(updatedHistory);
-    saveData(updatedUsers, updatedHistory);
-    setEditingUser(null);
+      if (editingUser.documento?.trim()) {
+        payload.documento = editingUser.documento.trim();
+      }
+
+      if (editingUser.Contrasena) {
+        payload.Contrasena = editingUser.Contrasena;
+      }
+
+      const response = await fetch(`/api/usuarios/${editingUser.idUsuario}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "No se pudo actualizar el usuario.");
+      }
+
+      setUsers((prev) => prev.map((user) => (user.idUsuario === editingUser.idUsuario ? data.data : user)));
+      setEditingUser(null);
+    } catch (error) {
+      setFormError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {
@@ -115,27 +202,54 @@ function UsersAdmin() {
 
         <div className="dashboard-card">
           <h2>Agregar Usuario</h2>
-          <form className="form-container" onSubmit={addUser}>
-            <div className="input-wrapper">
-              <input
-                type="text"
-                placeholder="Nombre"
-                value={userForm.name}
-                onChange={handleNameChange}
-                className={nameError ? "input-error" : ""}
-                required
-              />
-              {nameError && <span className="field-alert">⚠ {nameError}</span>}
-            </div>
+          <form className="form-container" onSubmit={handleCreateUser}>
+            {formError && <p className="field-alert">⚠ {formError}</p>}
+            <input
+              type="text"
+              placeholder="Nombre"
+              value={userForm.nombre}
+              onChange={(e) => setUserForm({ ...userForm, nombre: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Documento (opcional)"
+              value={userForm.documento}
+              onChange={(e) => setUserForm({ ...userForm, documento: e.target.value })}
+            />
             <input
               type="email"
               placeholder="Correo"
-              value={userForm.email}
-              onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+              value={userForm.correo}
+              onChange={(e) => setUserForm({ ...userForm, correo: e.target.value })}
               required
             />
-            <button className="btn btn-primary" type="submit">
-              Guardar Usuario
+            <input
+              type="text"
+              placeholder="Teléfono (opcional)"
+              value={userForm.telefono}
+              onChange={(e) => setUserForm({ ...userForm, telefono: e.target.value })}
+            />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              value={userForm.Contrasena}
+              onChange={(e) => setUserForm({ ...userForm, Contrasena: e.target.value })}
+              required
+            />
+            <select
+              value={userForm.idRol}
+              onChange={(e) => setUserForm({ ...userForm, idRol: e.target.value })}
+              className="role-select"
+            >
+              {roles.map((role) => (
+                <option key={role.idRol} value={role.idRol}>
+                  {role.nombre}
+                </option>
+              ))}
+            </select>
+            <button className="btn btn-primary" type="submit" disabled={loading}>
+              {loading ? "Guardando..." : "Guardar Usuario"}
             </button>
           </form>
         </div>
@@ -147,26 +261,28 @@ function UsersAdmin() {
               <tr>
                 <th>Nombre</th>
                 <th>Correo</th>
+                <th>Rol</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               {users.length === 0 ? (
                 <tr>
-                  <td colSpan="3" style={{ textAlign: "center" }}>
+                  <td colSpan="4" style={{ textAlign: "center" }}>
                     No se encontraron usuarios.
                   </td>
                 </tr>
               ) : (
                 users.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.name}</td>
-                    <td>{user.email}</td>
+                  <tr key={user.idUsuario}>
+                    <td>{user.nombre}</td>
+                    <td>{user.correo}</td>
+                    <td>{roles.find((role) => role.idRol === user.idRol)?.nombre || user.rol_nombre || "Sin rol"}</td>
                     <td style={{ display: "flex", gap: "8px" }}>
-                      <button className="btn btn-secondary" onClick={() => setEditingUser({ ...user })}>
+                      <button className="btn btn-secondary" onClick={() => setEditingUser({ ...user, idRol: String(user.idRol || "") })}>
                         Editar
                       </button>
-                      <button className="btn btn-danger" onClick={() => deleteUser(user.id)}>
+                      <button className="btn btn-danger" onClick={() => handleDeleteUser(user.idUsuario)}>
                         Eliminar
                       </button>
                     </td>
@@ -181,24 +297,54 @@ function UsersAdmin() {
           <div className="modal-overlay">
             <div className="modal-card">
               <h2>Editar Usuario</h2>
-              <form className="form-container" onSubmit={saveEditUser}>
+              <form className="form-container" onSubmit={handleUpdateUser}>
+                {formError && <p className="field-alert">⚠ {formError}</p>}
                 <input
                   type="text"
                   placeholder="Nombre"
-                  value={editingUser.name}
-                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  value={editingUser.nombre || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, nombre: e.target.value })}
                   required
+                />
+                <input
+                  type="text"
+                  placeholder="Documento (opcional)"
+                  value={editingUser.documento || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, documento: e.target.value })}
                 />
                 <input
                   type="email"
                   placeholder="Correo"
-                  value={editingUser.email}
-                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  value={editingUser.correo || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, correo: e.target.value })}
                   required
                 />
+                <input
+                  type="text"
+                  placeholder="Teléfono (opcional)"
+                  value={editingUser.telefono || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, telefono: e.target.value })}
+                />
+                <input
+                  type="password"
+                  placeholder="Nueva contraseña (opcional)"
+                  value={editingUser.Contrasena || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, Contrasena: e.target.value })}
+                />
+                <select
+                  value={editingUser.idRol || ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, idRol: e.target.value })}
+                  className="role-select"
+                >
+                  {roles.map((role) => (
+                    <option key={role.idRol} value={role.idRol}>
+                      {role.nombre}
+                    </option>
+                  ))}
+                </select>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button className="btn btn-primary" type="submit">
-                    Guardar cambios
+                  <button className="btn btn-primary" type="submit" disabled={loading}>
+                    {loading ? "Guardando..." : "Guardar cambios"}
                   </button>
                   <button className="btn btn-secondary" type="button" onClick={() => setEditingUser(null)}>
                     Cancelar
