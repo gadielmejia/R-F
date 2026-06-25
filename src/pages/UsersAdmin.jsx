@@ -20,6 +20,7 @@ function UsersAdmin() {
   const [formError, setFormError] = useState("");
   const [userForm, setUserForm] = useState(emptyForm());
   const [editingUser, setEditingUser] = useState(null);
+  const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -101,6 +102,27 @@ function UsersAdmin() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const isCurrentAccount = (user) => {
+    if (!currentUser) return false;
+
+    const currentId = currentUser?.idUsuario ?? currentUser?.id;
+    const targetId = user?.idUsuario ?? user?.id;
+
+    if (currentId && targetId && Number(currentId) === Number(targetId)) {
+      return true;
+    }
+
+    const currentEmail = (currentUser?.correo || currentUser?.email || "").toLowerCase();
+    const targetEmail = (user?.correo || user?.email || "").toLowerCase();
+
+    return Boolean(currentEmail && targetEmail && currentEmail === targetEmail);
+  };
+
+  const getRoleName = (user) => {
+    const role = roles.find((roleItem) => String(roleItem.idRol) === String(user?.idRol));
+    return role?.nombre || user?.rol_nombre || "Sin rol";
   };
 
   const handleDeleteUser = async (id) => {
@@ -273,21 +295,44 @@ function UsersAdmin() {
                   </td>
                 </tr>
               ) : (
-                users.map((user) => (
-                  <tr key={user.idUsuario}>
-                    <td>{user.nombre}</td>
-                    <td>{user.correo}</td>
-                    <td>{roles.find((role) => role.idRol === user.idRol)?.nombre || user.rol_nombre || "Sin rol"}</td>
-                    <td style={{ display: "flex", gap: "8px" }}>
-                      <button className="btn btn-secondary" onClick={() => setEditingUser({ ...user, idRol: String(user.idRol || "") })}>
-                        Editar
-                      </button>
-                      <button className="btn btn-danger" onClick={() => handleDeleteUser(user.idUsuario)}>
-                        Eliminar
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                users.map((user) => {
+                  const selfAccount = isCurrentAccount(user);
+                  return (
+                    <tr key={user.idUsuario}>
+                      <td>
+                        <div className="user-name-cell">
+                          <span>{user.nombre}</span>
+                          {selfAccount && <span className="self-account-badge">Tu cuenta</span>}
+                        </div>
+                      </td>
+                      <td>{user.correo}</td>
+                      <td>{getRoleName(user)}</td>
+                      <td style={{ display: "flex", gap: "8px" }}>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            const matchingRole = roles.find((roleItem) => String(roleItem.idRol) === String(user?.idRol));
+                            setEditingUser({
+                              ...user,
+                              Contrasena: "",
+                              idRol: matchingRole ? String(matchingRole.idRol) : String(user?.idRol || ""),
+                            });
+                          }}
+                        >
+                          Editar
+                        </button>
+                        <button
+                          className="btn btn-danger"
+                          onClick={() => !selfAccount && handleDeleteUser(user.idUsuario)}
+                          disabled={selfAccount}
+                          title={selfAccount ? "No puedes eliminar tu propia cuenta" : "Eliminar usuario"}
+                        >
+                          {selfAccount ? "No eliminar" : "Eliminar"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -327,17 +372,20 @@ function UsersAdmin() {
                 />
                 <input
                   type="password"
-                  placeholder="Nueva contraseña (opcional)"
+                  placeholder="Nueva contraseña (dejar vacío para no cambiar)"
                   value={editingUser.Contrasena || ""}
                   onChange={(e) => setEditingUser({ ...editingUser, Contrasena: e.target.value })}
                 />
+                <div style={{ fontSize: "0.95rem", color: "#4b5563" }}>
+                  Rol actual: <strong>{getRoleName(editingUser)}</strong>
+                </div>
                 <select
-                  value={editingUser.idRol || ""}
+                  value={editingUser.idRol ? String(editingUser.idRol) : ""}
                   onChange={(e) => setEditingUser({ ...editingUser, idRol: e.target.value })}
                   className="role-select"
                 >
                   {roles.map((role) => (
-                    <option key={role.idRol} value={role.idRol}>
+                    <option key={role.idRol} value={String(role.idRol)}>
                       {role.nombre}
                     </option>
                   ))}
