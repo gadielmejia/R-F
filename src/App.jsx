@@ -11,6 +11,7 @@ import UsersAdmin from './pages/UsersAdmin';
 import InventoryAdmin from './pages/InventoryAdmin';
 import Cart from './pages/Cart';
 import Profile from "./pages/Profile";
+import Citas from "./pages/Citas";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/dashboarduser" element={<DashboardUser />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/citas" element={<Citas/>} />
       </Routes>
     </BrowserRouter>
   );
