@@ -23,41 +23,43 @@ function Login() {
         };
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            const data = new TextEncoder().encode(password);
-            const hashBuf = await crypto.subtle.digest('SHA-256', data);
-            const passwordHash = Array.from(new Uint8Array(hashBuf))
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
+const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+        const encoded = new TextEncoder().encode(password);
+        const hashBuf = await crypto.subtle.digest('SHA-256', encoded);
+        const passwordHash = Array.from(new Uint8Array(hashBuf))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
 
-            const res = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ correo: email, Contrasena: passwordHash }),
-            });
-            const data2 = await res.json();
-            if (!res.ok) {
-                alert(data2.message || 'Credenciales incorrectas');
-                return;
-            }
-
-            const normalizedUser = normalizeUser(data2.data);
-            localStorage.setItem('currentUser', JSON.stringify(normalizedUser));
-            localStorage.setItem('role', normalizedUser.role);
-            localStorage.setItem('email', normalizedUser.email);
-            localStorage.setItem('name', normalizedUser.name);
-
-            if (normalizedUser.role === 'admin') {
-                navigate('/dashboardadmin', { replace: true });
-            } else {
-                navigate('/dashboarduser', { replace: true });
-            }
-        } catch (err) {
-            alert('Error de conexión con el servidor');
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo: email, Contrasena: passwordHash }),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+            alert(json.message || 'Credenciales incorrectas');
+            return;
         }
-    };
+
+        // Guardar token y datos de usuario
+        const { token, usuario } = json.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('currentUser', JSON.stringify({
+            ...usuario,
+            role: usuario.rol_nombre === 'admin' ? 'admin' : 'user',
+        }));
+
+        if (usuario.rol_nombre === 'admin') {
+            navigate('/dashboardadmin', { replace: true });
+        } else {
+            navigate('/dashboarduser', { replace: true });
+        }
+    } catch (err) {
+        alert('Error de conexión con el servidor');
+    }
+};
     return (
         <>
             <nav className="login-nav">
