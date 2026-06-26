@@ -1,157 +1,400 @@
-/* =========================
-   DASHBOARD USUARIO
-========================= */
-
-.dashboard-user {
+/* ===================================================
+   DASHBOARD USUARIO - ESTILOS BASE
+   =================================================== */
+.dashboard-page {
   min-height: 100vh;
+  background-color: #eff7ee;
+  color: #212529;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.dashboard-user .products-section {
-  padding: 60px 40px;
+/* ===================================================
+   NOTIFICACIÓN ESTILO APPLE
+   =================================================== */
+.apple-notification-toast {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  width: 90%;
+  max-width: 400px;
+  z-index: 9999;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: 
+    top 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+    opacity 0.3s ease, 
+    transform 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.dashboard-user .section-header {
-  text-align: center;
-  margin-bottom: 50px;
+/* Estado Activo */
+.apple-notification-toast.show {
+  top: 25px;
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
 }
 
-.dashboard-user .section-header h2 {
-  font-size: 42px;
+/* Fondo Frosted Glass Modo Claro */
+.apple-toast-blur-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  z-index: 1;
+}
+
+.apple-toast-inner {
+  position: relative;
+  z-index: 2;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Icono redondo */
+.apple-toast-icon-wrapper {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #2d6a4f;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+.apple-toast-icon-wrapper svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Textos */
+.apple-toast-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.apple-toast-app-name {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+  color: #6c757d;
+}
+.apple-toast-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #212529;
+}
+
+/* ===================================================
+   MENU / NAVBAR (SIEMPRE FIJO EN BLANCO)
+   =================================================== */
+.login-nav {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e9ecef !important;
+  position: sticky;
+  top: 0;
+  z-index: 2000;
+}
+.login-nav-inner {
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.login-logo {
   font-family: 'Playfair Display', serif;
-  color: var(--primary-dark);
-  margin-bottom: 10px;
+  font-size: 2.2rem;
+  color: #1b4332 !important;
+  margin: 0;
+}
+.login-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.login-nav-links a, .logout-btn-nav {
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: #f5faf4 !important;
+  color: #212529 !important;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #e9ecef !important;
+  cursor: pointer;
+  transition: .3s;
+}
+.login-nav-links a:hover, .logout-btn-nav:hover {
+  background: #2d6a4f !important;
+  color: white !important;
 }
 
-.dashboard-user .section-header p {
-  color: var(--text-muted);
-  font-size: 18px;
+/* BOTÓN DE TEMA EN EL NAV BLANCO */
+.theme-toggle-nav {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 1px solid #e9ecef !important;
+  background: #ffffff !important;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: .3s;
+}
+.theme-toggle-nav:hover {
+  transform: scale(1.05);
+}
+.theme-icon-nav {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #2d6a4f !important;
+  background: linear-gradient(to right, #2d6a4f 50%, transparent 50%) !important;
 }
 
-.dashboard-user .products-grid {
+/* ===================================================
+   FOOTER (SIEMPRE FIJO EN BLANCO)
+   =================================================== */
+footer, .footer, .dashboard-page .footer {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border-top: 1px solid #e9ecef !important;
+  padding: 20px 40px !important;
+}
+footer a, .footer a {
+  color: #2d6a4f !important;
+}
+footer p, .footer p {
+  color: #6c757d !important;
+}
+
+/* ===================================================
+   SECCIÓN DE SALUDO CON EFECTO LAVA / AGUA
+   =================================================== */
+.products-section {
+  padding: 50px 40px;
+}
+.section-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.greeting-title {
+  font-size: 38px;
+  font-family: 'Playfair Display', serif;
+  color: #1b4332;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+.gradient-name {
+  background: linear-gradient(120deg, #a855f7, #6366f1, #ec4899, #3b82f6, #a855f7);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  font-weight: bold;
+  animation: fluidLava 4s linear infinite;
+}
+
+@keyframes fluidLava {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.greeting-svg {
+  width: 32px;
+  height: 32px;
+  color: #ffb703;
+  display: inline-block;
+  vertical-align: middle;
+  animation: sparklePulse 2s infinite ease-in-out;
+}
+
+@keyframes sparklePulse {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+  50% { transform: scale(1.18) rotate(15deg); opacity: 1; }
+}
+
+.section-header p {
+  color: #6c757d;
+  font-size: 16px;
+}
+.products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 30px;
 }
 
-.dashboard-user .product-card {
-  background: var(--surface);
+/* TARJETAS DE PRODUCTOS */
+.product-card {
+  background: #ffffff;
   border-radius: 24px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, .05);
+  border: 1px solid #e9ecef;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .04);
   transition: all .3s ease;
 }
-
-.dashboard-user .product-card:hover {
+.product-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, .12);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, .1);
 }
-
-.dashboard-user .product-card img {
+.product-card img {
   width: 100%;
-  height: 420px;
+  height: 400px;
   object-fit: cover;
 }
-
-.dashboard-user .product-card-content {
-  padding: 22px;
+.product-card-content {
+  padding: 20px;
 }
-
-.dashboard-user .product-card h3 {
-  margin-bottom: 12px;
-  font-size: 22px;
+.product-card h3 {
+  font-size: 20px;
+  margin-bottom: 10px;
+  color: #212529;
 }
-
-.dashboard-user .category {
+.category {
   display: inline-block;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border-radius: 999px;
   background: #e8f5e9;
-  color: var(--primary-dark);
-  font-size: 14px;
+  color: #2d6a4f;
+  font-size: 13px;
   font-weight: 600;
+  margin-bottom: 12px;
+}
+.details {
+  color: #6c757d;
+  font-size: 14px;
+  margin: 10px 0;
+}
+.price {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1b4332;
   margin-bottom: 15px;
 }
 
-.dashboard-user .details {
-  color: var(--text-muted);
-  margin: 15px 0;
-}
-
-.dashboard-user .price {
-  display: block;
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--primary-dark);
-  margin-bottom: 20px;
-}
-
-.dashboard-user .product-card button {
+/* BOTONES AGREGAR AL CARRITO CLARO */
+.product-card button {
   width: 100%;
   padding: 14px;
   border: none;
   border-radius: 14px;
-  background: var(--primary);
+  background: #2d6a4f;
   color: white;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: .3s;
 }
-
-.dashboard-user .product-card button:hover {
-  background: var(--primary-dark);
+.product-card button:hover {
+  background: #1b4332;
 }
 
-body.dark .dashboard-user .product-card {
-  background: #18281b;
-  border-color: #29402d;
+/* ===================================================
+   MODO OSCURO COHESIVO
+   =================================================== */
+.dashboard-page.dark {
+  background: #102012;
 }
 
-body.dark .dashboard-user .section-header h2 {
+/* ¡AQUÍ ESTÁ EL FIX DEL TOAST EN MODO OSCURO! */
+.dashboard-page.dark .apple-notification-toast .apple-toast-blur-bg {
+  background: rgba(22, 38, 25, 0.88) !important; /* Cristal verde/gris oscuro real */
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.dashboard-page.dark .apple-notification-toast .apple-toast-text {
+  color: #ffffff !important; /* Forzamos letras blancas legibles */
+}
+.dashboard-page.dark .apple-notification-toast .apple-toast-app-name {
+  color: #8dbfa1 !important;
+}
+.dashboard-page.dark .apple-notification-toast .apple-toast-icon-wrapper {
+  background: #2d8a43 !important;
+}
+
+/* Resto de componentes en modo oscuro */
+.dashboard-page.dark .greeting-title {
   color: white;
 }
-
-body.dark .dashboard-user .section-header p,
-body.dark .dashboard-user .details {
-  color: #b4c7b6;
+.dashboard-page.dark .section-header p,
+.dashboard-page.dark .details {
+  color: #c7d6c9;
 }
-
-body.dark .dashboard-user .price {
-  color: #7dff99;
+.dashboard-page.dark .product-card {
+  background: #1b2b1d;
+  border-color: #355339;
 }
-
-@media (max-width: 768px) {
-  .dashboard-user .products-section {
-    padding: 30px 20px;
-  }
-
-  .dashboard-user .section-header h2 {
-    font-size: 32px;
-  }
-
-  .dashboard-user .product-card img {
-    height: 320px;
-  }
-}
-
-.btn.btn-primary {
-  background-color: var(--primary);
-  border: none;
+.dashboard-page.dark .product-card h3 {
   color: white;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin-top: 10px;
-  border-radius: 5px;
-  cursor: pointer;
+}
+.dashboard-page.dark .category {
+  background: #243626;
+  color: #66d17d;
+}
+.dashboard-page.dark .price {
+  color: white;
+}
+.dashboard-page.dark .product-card button {
+  background: #2d8a43;
+}
+.dashboard-page.dark .product-card button:hover {
+  background: #39a553;
 }
 
+/* ===================================================
+   ANIMACIONES GENERALES Y RESPONSIVE
+   =================================================== */
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(25px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.greeting-wrapper {
+  max-height: 200px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height 0.8s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.8s ease;
+}
+.greeting-wrapper.hidden {
+  max-height: 0;
+  opacity: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.animated-header {
+  animation: fadeInDown 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.animated-card {
+  opacity: 0;
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
 
-dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-} 
+@media (max-width: 900px) {
+  .login-nav-inner {
+    flex-direction: column;
+    gap: 15px;
+  }
+  .products-section {
+    padding: 30px 15px;
+  }
+}

@@ -9,9 +9,8 @@ import UsersAdmin from './pages/UsersAdmin';
 import InventoryAdmin from './pages/InventoryAdmin';
 import ReservasAdmin from './pages/ReservasAdmin';
 import Cart from './pages/Cart';
-import Profile from './pages/Profile';
-import MisReservas from './pages/MisReservas';
-import AgendarCita from './pages/AgendarCita';
+import Profile from "./pages/Profile";
+import Citas from "./pages/Citas";
 
 function App() {
   return (
@@ -28,8 +27,7 @@ function App() {
         <Route path="/dashboarduser" element={<DashboardUser />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/mis-reservas" element={<MisReservas />} />
-        <Route path="/agendar-cita" element={<AgendarCita />} />
+        <Route path="/citas" element={<Citas/>} />
       </Routes>
     </BrowserRouter>
   );
