@@ -1,62 +1,70 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
-import { api } from "../utils/api";
+import "../styles/dashboardUser.css";
+import vestidoverde from "../assets/vestidoverde.jpg";
+import vestidonegro from "../assets/vestidonregro.jpg";
+import vestidoazul from "../assets/vestidoazul.png";
+import vestidorojo from "../assets/vestidorojo.png";
+import vestidodorado from "../assets/vestidodorado.png";
 
 function DashboardUser() {
   const navigate = useNavigate();
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
 
-  // Filtros
-  const [search, setSearch] = useState("");
-  const [filterCategoria, setFilterCategoria] = useState("");
-  const [filterTalla, setFilterTalla] = useState("");
-  const [filterColor, setFilterColor] = useState("");
-  const [filterPrecioMax, setFilterPrecioMax] = useState("");
-  const [sortBy, setSortBy] = useState("nombre");
+  const [userName] = useState(() => {
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    return user ? (user.nombre || "Alejandro") : "Alejandro";
+  });
+  
+  const [showGreeting, setShowGreeting] = useState(true);
+
+  // --- ESTADOS PARA LA NOTIFICACIÓN ESTILO APPLE ---
+  const [toast, setToast] = useState({ show: false, message: "" });
+  const [toastTimeoutId, setToastTimeoutId] = useState(null);
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("currentUser") || "null");
+    const timer = setTimeout(() => {
+      setShowGreeting(false);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("currentUser"));
     if (!user || user.role !== "user") {
-      navigate("/login", { replace: true });
-      return;
+      navigate("/login");
     }
     loadData();
   }, [navigate]);
 
-  const loadData = async () => {
-    try {
-      const [prodRes, catRes] = await Promise.all([
-        api.get("/prendas"),
-        api.get("/categorias"),
-      ]);
-      const prodData = await prodRes.json();
-      const catData = await catRes.json();
-      setProducts(prodData.data || []);
-      setCategories(catData.data || []);
-    } catch (err) {
-      console.error("Error cargando datos:", err);
-    } finally {
-      setLoading(false);
-    }
+  const toggleTheme = () => {
+    const nextTheme = !darkMode;
+    setDarkMode(nextTheme);
+    localStorage.setItem("theme", nextTheme ? "dark" : "light");
   };
 
-  const addToCart = (product) => {
+  // --- FUNCIÓN DE AGREGAR AL CARRITO CONFIGURADA CON TOAST ---
+  const addToCart = (id, title, price, image) => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const yaExiste = cart.find((i) => i.id === product.idPrenda);
-    if (yaExiste) {
-      alert("Esta prenda ya está en tu carrito.");
-      return;
-    }
-    cart.push({
-      id: product.idPrenda,
-      title: product.nombre_prenda,
-      price: Number(product.precio_alquiler),
-    });
+    cart.push({ id, title, price, image });
     localStorage.setItem("cart", JSON.stringify(cart));
-    alert("✅ Prenda agregada al carrito.");
+    
+    // Si ya había una notificación activa, limpiamos su temporizador para que no se corte antes
+    if (toastTimeoutId) clearTimeout(toastTimeoutId);
+
+    // Activamos la notificación iOS
+    setToast({ show: true, message: `"${title}" se agregó al carrito.` });
+
+    // Se oculta automáticamente tras 3 segundos
+    const newTimeout = setTimeout(() => {
+      setToast({ show: false, message: "" });
+    }, 3000);
+    
+    setToastTimeoutId(newTimeout);
   };
 
   const getCategoryName = (idCategoria) => {
@@ -120,142 +128,123 @@ function DashboardUser() {
     navigate("/login");
   };
 
-  const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
-
   return (
-    <>
-      <nav className="app-nav">
-        <div className="nav-inner">
-          <Link to="/dashboarduser" className="brand">RentStyle</Link>
-          <div className="nav-actions">
+    <div className={`dashboard-page ${darkMode ? "dark" : ""}`}>
+      
+      {/* NOTIFICACIÓN ESTILO APPLE (Sutil y flotante) */}
+      <div className={`apple-notification-toast ${toast.show ? "show" : ""}`}>
+        <div className="apple-toast-blur-bg"></div>
+        <div className="apple-toast-inner">
+          <div className="apple-toast-icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+          </div>
+          <div className="apple-toast-info">
+            <span className="apple-toast-app-name">RentStyle</span>
+            <p className="apple-toast-text">{toast.message || "Producto añadido"}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Menú de navegación fijo en blanco */}
+      <nav className="login-nav">
+        <div className="login-nav-inner">
+          <h2 className="login-logo">RentStyle</h2>
+          <div className="login-nav-links">
+            <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Cambiar tema">
+              <div className="theme-icon-nav"></div>
+            </button>
             <Link to="/cart">Carrito</Link>
+            <Link to="/Citas">Citas</Link>
             <Link to="/profile">Perfil</Link>
-            <button onClick={logout}>Cerrar sesión</button>
+            <button onClick={logout} className="logout-btn-nav">Cerrar sesión</button>
           </div>
         </div>
       </nav>
 
+      {/* Catálogo de Productos */}
       <section className="products-section">
-        <div className="section-header">
-          <h2>Bienvenido, {user.nombre}</h2>
-          <p>Descubre nuestras prendas disponibles para alquiler</p>
+        <div className={`greeting-wrapper ${!showGreeting ? "hidden" : ""}`}>
+          <div className="section-header animated-header">
+            <h2 className="greeting-title">
+              ¡Hola, <span className="gradient-name">{userName}</span>!
+              <svg className="greeting-svg" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2L14.8 8.4L21.2 11.2L14.8 14L12 20.4L9.2 14L2.8 11.2L9.2 8.4L12 2Z" />
+                <path d="M19 3L19.8 4.8L21.6 5.6L19.8 6.4L19 8.2L18.2 6.4L16.4 5.6L18.2 4.8L19 3Z" opacity="0.6" />
+              </svg>
+            </h2>
+            <p>Descubre nuestros productos disponibles para ti</p>
+          </div>
         </div>
 
-        {/* Buscador y filtros */}
-        <div style={{
-          background: "#f9fafb", border: "1px solid #e5e7eb",
-          borderRadius: "12px", padding: "1.25rem",
-          marginBottom: "1.5rem", display: "flex",
-          flexWrap: "wrap", gap: "0.75rem", alignItems: "flex-end"
-        }}>
-          {/* Buscador */}
-          <div style={{ flex: "1 1 200px" }}>
-            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "4px", color: "#374151" }}>
-              Buscar
-            </label>
-            <input
-              type="text"
-              placeholder="Nombre o descripción..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
-                border: "1px solid #d1d5db", fontSize: "0.9rem" }}
-            />
-          </div>
+        <div className="products-grid">
+          <article className="product-card card animated-card" style={{ animationDelay: "0.1s" }}>
+            <img src={vestidoverde} alt="Vestido Verde" />
+            <div className="product-card-content">
+              <h3>Vestido de Gala Verde Jade</h3>
+              <p className="category">Gala</p>
+              <p className="details">Talla M · Stock 4</p>
+              <strong className="price">$180.000</strong>
+              <button onClick={() => addToCart(1, "Vestido de Gala Verde Jade", 180000, vestidoverde)}>
+                Agregar al carrito
+              </button>
+            </div>
+          </article>
 
-          {/* Categoría */}
-          <div style={{ flex: "1 1 150px" }}>
-            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "4px", color: "#374151" }}>
-              Categoría
-            </label>
-            <select
-              value={filterCategoria}
-              onChange={(e) => setFilterCategoria(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
-                border: "1px solid #d1d5db", fontSize: "0.9rem", background: "#fff" }}
-            >
-              <option value="">Todas</option>
-              {categories.map((c) => (
-                <option key={c.idCategoria} value={String(c.idCategoria)}>{c.nombre}</option>
-              ))}
-            </select>
-          </div>
+          <article className="product-card card animated-card" style={{ animationDelay: "0.2s" }}>
+            <img src={vestidonegro} alt="Vestido Negro" />
+            <div className="product-card-content">
+              <h3>Vestido Elegante Negro</h3>
+              <p className="category">Cóctel</p>
+              <p className="details">Talla S · Stock 3</p>
+              <strong className="price">$150.000</strong>
+              <button onClick={() => addToCart(2, "Vestido Elegante Negro", 150000, vestidonegro)}>
+                Agregar al carrito
+              </button>
+            </div>
+          </article>
 
-          {/* Talla */}
-          <div style={{ flex: "1 1 120px" }}>
-            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "4px", color: "#374151" }}>
-              Talla
-            </label>
-            <select
-              value={filterTalla}
-              onChange={(e) => setFilterTalla(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
-                border: "1px solid #d1d5db", fontSize: "0.9rem", background: "#fff" }}
-            >
-              <option value="">Todas</option>
-              {tallas.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-          </div>
+          <article className="product-card card animated-card" style={{ animationDelay: "0.3s" }}>
+            <img src={vestidoazul} alt="Vestido Azul Marino" />
+            <div className="product-card-content">
+              <h3>Vestido de Noche Azul Imperial</h3>
+              <p className="category">Gala / Grados</p>
+              <p className="details">Talla L · Stock 2</p>
+              <strong className="price">$195.000</strong>
+              <button onClick={() => addToCart(3, "Vestido de Noche Azul Imperial", 195000, vestidoazul)}>
+                Agregar al carrito
+              </button>
+            </div>
+          </article>
 
-          {/* Color */}
-          <div style={{ flex: "1 1 120px" }}>
-            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "4px", color: "#374151" }}>
-              Color
-            </label>
-            <select
-              value={filterColor}
-              onChange={(e) => setFilterColor(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
-                border: "1px solid #d1d5db", fontSize: "0.9rem", background: "#fff" }}
-            >
-              <option value="">Todos</option>
-              {colores.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+          <article className="product-card card animated-card" style={{ animationDelay: "0.4s" }}>
+            <img src={vestidorojo} alt="Vestido Rojo" />
+            <div className="product-card-content">
+              <h3>Vestido Cóctel Rojo Pasión</h3>
+              <p className="category">Fiesta / Cóctel</p>
+              <p className="details">Talla XS · Stock 2</p>
+              <strong className="price">$160.000</strong>
+              <button onClick={() => addToCart(4, "Vestido Cóctel Rojo Pasión", 160000, vestidorojo)}>
+                Agregar al carrito
+              </button>
+            </div>
+          </article>
 
-          {/* Precio máximo */}
-          <div style={{ flex: "1 1 140px" }}>
-            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "4px", color: "#374151" }}>
-              Precio máximo
-            </label>
-            <input
-              type="number"
-              placeholder="Ej: 200000"
-              value={filterPrecioMax}
-              onChange={(e) => setFilterPrecioMax(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
-                border: "1px solid #d1d5db", fontSize: "0.9rem" }}
-            />
-          </div>
-
-          {/* Ordenar */}
-          <div style={{ flex: "1 1 160px" }}>
-            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "4px", color: "#374151" }}>
-              Ordenar por
-            </label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", borderRadius: "8px",
-                border: "1px solid #d1d5db", fontSize: "0.9rem", background: "#fff" }}
-            >
-              <option value="nombre">Nombre A-Z</option>
-              <option value="precio_asc">Precio: menor a mayor</option>
-              <option value="precio_desc">Precio: mayor a menor</option>
-            </select>
-          </div>
-
-          {/* Limpiar filtros */}
-          {hayFiltros && (
-            <button
-              onClick={clearFilters}
-              style={{ padding: "8px 16px", borderRadius: "8px", border: "none",
-                background: "#ef4444", color: "#fff", fontWeight: 600,
-                cursor: "pointer", fontSize: "0.9rem", alignSelf: "flex-end" }}
-            >
-              Limpiar filtros
-            </button>
-          )}
+          <article className="product-card card animated-card" style={{ animationDelay: "0.5s" }}>
+            <img src={vestidodorado} alt="Vestido Dorado" />
+            <div className="product-card-content">
+              <h3>Vestido de Noche Dorado Glam</h3>
+              <p className="category">Gala / Quinceañero</p>
+              <p className="details">Talla M · Stock 3</p>
+              <strong className="price">$185.000</strong>
+              <button onClick={() => addToCart(5, "Vestido de Noche Dorado Glam", 185000, vestidodorado)}>
+                Agregar al carrito
+              </button>
+            </div>
+          </article>
         </div>
 
         {/* Resultados */}
@@ -331,8 +320,9 @@ function DashboardUser() {
           </div>
         )}
       </section>
+
       <Footer />
-    </>
+    </div>
   );
 }
 

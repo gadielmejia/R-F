@@ -1,94 +1,51 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../utils/api";
-import "../styles/cart.css";
+import Footer from "../components/Footer";
+import "../styles/cart.css"; // Ruta hacia tus estilos del carrito
 
 function Cart() {
   const navigate = useNavigate();
-  const [cart, setCart] = useState([]);
-  const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
-  const [fechaEvento, setFechaEvento] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [comprobante, setComprobante] = useState(null);
 
+  // 1. Estado del Modo Oscuro
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
+
+  // 2. Estado para los productos del carrito
+  const [cartItems, setCartItems] = useState(() => {
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  });
+
+  // Proteger la ruta por si no hay usuario
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (!user) { navigate("/login"); return; }
-    const saved = JSON.parse(localStorage.getItem("cart")) || [];
-    setCart(saved);
+    const user = JSON.parse(localStorage.getItem("currentUser"));
+    if (!user) {
+      navigate("/login");
+    }
   }, [navigate]);
 
-  const removeFromCart = (index) => {
-    const updated = [...cart];
-    updated.splice(index, 1);
-    setCart(updated);
-    localStorage.setItem("cart", JSON.stringify(updated));
+  const toggleTheme = () => {
+    const nextTheme = !darkMode;
+    setDarkMode(nextTheme);
+    localStorage.setItem("theme", nextTheme ? "dark" : "light");
   };
 
-  const total = cart.reduce((sum, item) => sum + Number(item.price), 0);
+  // Eliminar un producto específico del carrito
+  const removeItem = (indexToRemove) => {
+    const updatedCart = cartItems.filter((_, index) => index !== indexToRemove);
+    setCartItems(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
 
-  const checkout = async () => {
-    if (cart.length === 0) { alert("Tu carrito está vacío."); return; }
-    if (!fechaInicio || !fechaFin || !fechaEvento) {
-      alert("Debes seleccionar fecha de inicio, fin y evento para continuar."); return;
-    }
-    if (new Date(fechaFin) <= new Date(fechaInicio)) {
-      alert("La fecha de fin debe ser posterior a la fecha de inicio."); return;
-    }
+  // Calcular el total de la orden
+  const calculateTotal = () => {
+    return cartItems.reduce((total, item) => total + item.price, 0);
+  };
 
-    const user = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (!user) { navigate("/login"); return; }
-
-    setLoading(true);
-    try {
-      // Buscar un admin (id_administrador requerido por la BD)
-      const adminRes = await api.get("/usuarios");
-      const adminData = await adminRes.json();
-      const admin = (adminData.data || []).find(u => u.rol_nombre === "admin" || u.idRol === 1);
-      if (!admin) { alert("No hay administrador disponible en el sistema."); setLoading(false); return; }
-
-      // Crear la reserva
-      const reservaRes = await api.post("/reservas", {
-        id_cliente: user.idUsuario,
-        id_administrador: admin.idUsuario,
-        fecha_reserva: new Date().toISOString().split("T")[0],
-        fecha_evento: fechaEvento,
-        fecha_inicio: fechaInicio,
-        fecha_fin: fechaFin,
-        observaciones: cart.map(i => i.title).join(", "),
-        estado: "Pendiente",
-      });
-      const reservaData = await reservaRes.json();
-      if (!reservaRes.ok) throw new Error(reservaData.message);
-
-      // Generar comprobante
-      const compRes = await api.post("/comprobantes", {
-        idReserva: reservaData.data.idReserva,
-        monto_total: total,
-        tipo_comprobante: "Ticket",
-        descripcion: `Reserva de: ${cart.map(i => i.title).join(", ")}`,
-      });
-      const compData = await compRes.json();
-
-      setComprobante({
-        numero: compData.data?.numero_comprobante || "N/A",
-        total,
-        fechaInicio,
-        fechaFin,
-        fechaEvento,
-        prendas: cart.map(i => i.title),
-        cliente: user.nombre,
-        idReserva: reservaData.data.idReserva,
-      });
-
-      localStorage.removeItem("cart");
-      setCart([]);
-    } catch (err) {
-      alert("Error al procesar la reserva: " + err.message);
-    } finally {
-      setLoading(false);
-    }
+  const logout = () => {
+    localStorage.removeItem("currentUser");
+    navigate("/login");
   };
 
   const logout = () => { localStorage.clear(); navigate("/login"); };
@@ -152,34 +109,87 @@ function Cart() {
   }
 
   return (
-    <>
-      <nav className="app-nav">
-        <div className="nav-inner">
-          <Link to="/dashboarduser" className="brand">RentStyle</Link>
-          <div className="nav-actions">
+    <div className={`cart-page ${darkMode ? "dark" : ""}`}>
+      
+      {/* NAVBAR FIJO BLANCO (Idéntico a los anteriores) */}
+      <nav className="login-nav">
+        <div className="login-nav-inner">
+          <h2 className="login-logo">RentStyle</h2>
+          <div className="login-nav-links">
+            <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Cambiar tema">
+              <div className="theme-icon-nav"></div>
+            </button>
             <Link to="/dashboarduser">Catálogo</Link>
-            <Link to="/mis-reservas">Mis reservas</Link>
+            <Link to="/cart" className="active-link">Carrito</Link>
+            <Link to="/citas">Citas</Link>
             <Link to="/profile">Perfil</Link>
-            <button onClick={logout}>Cerrar sesión</button>
+            <button onClick={logout} className="logout-btn-nav">Cerrar sesión</button>
           </div>
         </div>
       </nav>
 
-      <section className="products-section">
-        <div className="section-header">
+      {/* CONTENIDO PRINCIPAL */}
+      <main className="cart-container">
+        <div className="cart-header">
           <h2>Mi Carrito</h2>
-          <p>Revisa tus prendas y selecciona las fechas de alquiler.</p>
+          <p>Revisa tus prendas seleccionadas antes de finalizar el pedido.</p>
         </div>
 
-        {cart.length === 0 ? (
-          <div className="card" style={{ textAlign: "center", padding: "2rem" }}>
+        {cartItems.length === 0 ? (
+          /* ESTADO VACÍO (Tal cual se ve en tu imagen image_245e5f.png) */
+          <div className="empty-cart-card">
             <h3>Tu carrito está vacío</h3>
             <p>Agrega prendas desde el catálogo.</p>
-            <Link to="/dashboarduser" className="btn btn-primary" style={{ display: "inline-block", marginTop: "1rem" }}>
-              Ver catálogo
-            </Link>
+            <Link to="/dashboarduser" className="back-catalog-btn">Ir al Catálogo</Link>
           </div>
         ) : (
+          /* ESTADO CON PRODUCTOS */
+          <div className="cart-content-grid">
+            
+            {/* Lista de productos */}
+            <div className="cart-items-list">
+              {cartItems.map((item, index) => (
+                <div key={index} className="cart-item-row">
+                  <img src={item.image} alt={item.title} className="cart-item-img" />
+                  <div className="cart-item-details">
+                    <h4>{item.title}</h4>
+                    <span className="cart-item-price">${item.price.toLocaleString("es-CO")}</span>
+                  </div>
+                  <button className="remove-item-btn" onClick={() => removeItem(index)} aria-label="Eliminar producto">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* Resumen de pago */}
+            <div className="cart-summary-card">
+              <h3>Resumen del Pedido</h3>
+              <hr className="summary-divider" />
+              <div className="summary-row">
+                <span>Productos ({cartItems.length})</span>
+                <span>${calculateTotal().toLocaleString("es-CO")}</span>
+              </div>
+              <div className="summary-row">
+                <span>Envío / Seguro</span>
+                <span className="free-badge">Gratis</span>
+              </div>
+              <hr className="summary-divider" />
+              <div className="summary-row total-row">
+                <span>Total</span>
+                <strong>${calculateTotal().toLocaleString("es-CO")}</strong>
+              </div>
+              <button className="checkout-btn" onClick={() => alert("¡Procediendo al pago seguro!")}>
+                Finalizar Alquiler
+              </button>
+            </div>
+
+          </div>
+        ) 
+        (
           <>
             <div className="products-grid">
               {cart.map((item, index) => (
@@ -243,8 +253,11 @@ function Cart() {
             </div>
           </>
         )}
-      </section>
-    </>
+      </main>
+
+      {/* FOOTER FIJO BLANCO */}
+      <Footer />
+    </div>
   );
 }
 

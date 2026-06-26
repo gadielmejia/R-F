@@ -355,7 +355,7 @@ function UsersAdmin() {
                   type="text"
                   placeholder="Documento (opcional)"
                   value={editingUser.documento || ""}
-                  onChange={(e) => setEditingUser({ ...editingUser, documento: e.target.value })}
+                  disabled
                 />
                 <input
                   type="email"
@@ -381,7 +381,7 @@ function UsersAdmin() {
                 </div>
                 <select
                   value={editingUser.idRol ? String(editingUser.idRol) : ""}
-                  onChange={(e) => setEditingUser({ ...editingUser, idRol: e.target.value })}
+                  disabled
                   className="role-select"
                 >
                   {roles.map((role) => (

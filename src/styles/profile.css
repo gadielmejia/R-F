@@ -1,163 +1,365 @@
+/* ===================================================
+   VISTA DE PERFIL - ESTILOS BASE
+   =================================================== */
 .profile-page {
+  min-height: 100vh;
+  background-color: #eff7ee;
+  color: #212529;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ===================================================
+   NAVBAR & FOOTER FIJO EN BLANCO
+   =================================================== */
+.login-nav {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e9ecef !important;
+  position: sticky;
+  top: 0;
+  z-index: 2000;
+}
+.login-nav-inner {
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.login-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem;
+  color: #1b4332 !important;
+}
+.login-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+.login-nav-links a, .logout-btn-nav {
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: #f5faf4 !important;
+  color: #212529 !important;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #e9ecef !important;
+  cursor: pointer;
+  transition: .3s;
+}
+.login-nav-links a:hover, .logout-btn-nav:hover, .active-link {
+  background: #2d6a4f !important;
+  color: white !important;
+}
+.theme-toggle-nav {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 1px solid #e9ecef !important;
+  background: #ffffff !important;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 85vh;
-  padding: 40px;
+  cursor: pointer;
+}
+.theme-icon-nav {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #2d6a4f !important;
+  background: linear-gradient(to right, #2d6a4f 50%, transparent 50%) !important;
+}
+footer, .footer, .profile-page .footer {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border-top: 1px solid #e9ecef !important;
+  padding: 20px 40px !important;
+  margin-top: auto;
 }
 
+/* ===================================================
+   TARJETA CENTRADA DE PERFIL
+   =================================================== */
+.profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 40px 20px;
+}
 .profile-card {
-  background: var(--surface);
-  width: 100%;
-  max-width: 550px;
+  background: #ffffff;
+  border-radius: 24px;
   padding: 40px;
-  border-radius: var(--radius);
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 450px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease;
+}
+.profile-form h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 30px;
+  color: #1b4332;
   text-align: center;
+  margin-bottom: 25px;
 }
 
-.profile-image-container {
-  width: 170px;
-  height: 170px;
-  margin: 0 auto 20px;
+/* ===================================================
+   ZONA DEL AVATAR (SVG DINÁMICO DE PERSONITA)
+   =================================================== */
+.avatar-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 25px;
+  position: relative;
 }
-
-.profile-image-container img {
+.avatar-circle {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  border: 3px solid #2d6a4f;
+  position: relative;
+  background: #f0f5f2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+.avatar-img {
   width: 100%;
   height: 100%;
-  border-radius: 50%;
   object-fit: cover;
-  border: 4px solid var(--primary);
+  border-radius: 50%;
 }
-
-#avatarInput {
+.avatar-placeholder {
   width: 100%;
-  margin-bottom: 25px;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: #fff;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #e9ecef; /* Fondo gris inicial del circulo */
+  transition: background-color 0.3s ease;
+}
+.avatar-svg-icon {
+  width: 65px;
+  height: 65px;
+  color: #adb5bd; /* Tono gris fino para la personita */
+  transition: color 0.3s ease;
 }
 
-.profile-card h2 {
-  margin-bottom: 10px;
-  color: var(--primary-dark);
+/* Botón flotante para la cámara */
+.avatar-upload-label {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: #2d6a4f;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 10;
+  transition: .2s ease;
+}
+.avatar-upload-label:hover {
+  transform: scale(1.1);
+  background: #1b4332;
+}
+.avatar-upload-label svg {
+  width: 16px;
+  height: 16px;
+}
+.role-tag {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  color: #6c757d;
+  margin-top: 12px;
 }
 
-.profile-card p {
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
-.profile {
-  font-size: 30px;
-  font-weight: bold;
+/* ===================================================
+   CAMPOS DEL FORMULARIO
+   =================================================== */
+.form-group {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  text-align: center;
+  gap: 8px;
+  margin-bottom: 20px;
 }
-
-
-.profile-form {
-  margin-top: 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  text-align: left;
-}
-
-.profile-form label {
+.form-group label {
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text);
+  color: #2d6a4f;
 }
-
-.profile-form input {
-  width: 100%;
+.form-group input {
   padding: 14px;
-  border: 1px solid var(--border);
   border-radius: 12px;
+  border: 1px solid #dcdcdc;
   font-size: 15px;
+  background-color: #fafafa;
+  color: #212529;
   outline: none;
-  transition: 0.3s;
+  transition: all 0.3s ease;
+}
+.form-group input:focus {
+  border-color: #2d6a4f;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
 }
 
-.profile-form input:focus {
-  border-color: var(--primary);
-}
-
-.profile-form button {
-  margin-top: 10px;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  background: var(--primary);
+/* Botón Guardar */
+.save-profile-btn {
+  width: 100%;
+  background: #2d6a4f;
   color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 14px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
-}
-
-.profile-form button:hover {
-  background: var(--primary-dark);
-}
-
-/* Dark Mode */
-
-body.dark .profile-card {
-  background: #1b2d1d;
-  color: white;
-}
-
-body.dark .profile-form label,
-body.dark .profile-card h2 {
-  color: white;
-}
-
-body.dark .profile-form input {
-  background: #263728;
-  color: white;
-  border-color: #39513c;
-}
-
-body.dark .profile-card p {
-  color: #c8d8c8;
-}
-
-body.dark #avatarInput {
-  background: #263728;
-  color: white;
-  border-color: #39513c;
-}
-
-/* Responsive */
-
-@media (max-width: 768px) {
-  .profile-page {
-    padding: 20px;
-  }
-
-  .profile-card {
-    padding: 25px;
-  }
-
-  .profile-image-container {
-    width: 130px;
-    height: 130px;
-  }
-}
-
-.btn.btn-primary {
-  background-color: var(--primary);
-  border: none;
-  color: white;
-  padding: 10px 20px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
+  transition: background 0.3s ease;
   margin-top: 10px;
-  border-radius: 5px;
-  cursor: pointer;
+}
+.save-profile-btn:hover {
+  background: #1b4332;
+}
+
+/* ===================================================
+   TOAST NOTIFICACIÓN APPLE
+   =================================================== */
+.apple-notification-toast {
+  position: fixed;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%) scale(0.9);
+  width: 90%;
+  max-width: 400px;
+  z-index: 9999;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.15);
+  opacity: 0;
+  pointer-events: none;
+  transition: top 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, transform 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.apple-notification-toast.show {
+  top: 25px;
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
+.apple-toast-blur-bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 24px;
+  z-index: 1;
+}
+.apple-toast-inner {
+  position: relative;
+  z-index: 2;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.apple-toast-icon-wrapper {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #2d6a4f;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+}
+.apple-toast-icon-wrapper svg { width: 18px; height: 18px; }
+.apple-toast-info { display: flex; flex-direction: column; gap: 2px; }
+.apple-toast-app-name { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; color: #6c757d; }
+.apple-toast-text { margin: 0; font-size: 14px; font-weight: 500; color: #212529; }
+
+/* ===================================================
+   MODO OSCURO COHESIVO
+   =================================================== */
+.profile-page.dark {
+  background: #102012;
+}
+.profile-page.dark .profile-card {
+  background: #1b2b1d;
+  border-color: #355339;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+.profile-page.dark .profile-form h2 {
+  color: white;
+}
+.profile-page.dark .role-tag {
+  color: #c7d6c9;
+}
+.profile-page.dark .form-group label {
+  color: #66d17d;
+}
+.profile-page.dark .avatar-circle {
+  background: #162418;
+  border-color: #2d8a43;
+}
+.profile-page.dark .avatar-placeholder {
+  background: #243626; /* Círculo oscuro */
+}
+.profile-page.dark .avatar-svg-icon {
+  color: #66d17d; /* La personita se ilumina genial en modo noche */
+}
+.profile-page.dark .avatar-upload-label {
+  background: #2d8a43;
+}
+.profile-page.dark .avatar-upload-label:hover {
+  background: #39a553;
+}
+
+/* Inputs en modo noche */
+.profile-page.dark .form-group input {
+  background-color: #243626;
+  border-color: #355339;
+  color: white;
+}
+.profile-page.dark .form-group input:focus {
+  border-color: #66d17d;
+  background-color: #2a3f2d;
+}
+
+.profile-page.dark .save-profile-btn {
+  background: #2d8a43;
+}
+.profile-page.dark .save-profile-btn:hover {
+  background: #39a553;
+}
+
+/* Toast de Apple en modo oscuro */
+.profile-page.dark .apple-notification-toast .apple-toast-blur-bg {
+  background: rgba(22, 38, 25, 0.88) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+.profile-page.dark .apple-notification-toast .apple-toast-text { color: #ffffff !important; }
+.profile-page.dark .apple-notification-toast .apple-toast-app-name { color: #8dbfa1 !important; }
+.profile-page.dark .apple-notification-toast .apple-toast-icon-wrapper { background: #2d8a43 !important; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .login-nav-inner {
+    flex-direction: column;
+    gap: 15px;
+  }
 }
