@@ -11,6 +11,7 @@ function ProductsAdmin() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [productForm, setProductForm] = useState(emptyForm);
+  const [productFiles, setProductFiles] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,19 +28,31 @@ function ProductsAdmin() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [prodRes, catRes] = await Promise.all([api.get('/prendas'), api.get('/categorias')]);
-      const prodData = await prodRes.json();
-      const catData = await catRes.json();
+      const [prodRes, catRes] = await Promise.all([api.get('/api/prendas'), api.get('/api/categorias')]);
+      const prodData = prodRes.data;
+      const catData = catRes.data;
       setProducts(prodData.data || []);
       setCategories(catData.data || []);
       if (catData.data?.length > 0) {
         setProductForm(f => ({ ...f, idCategoria: String(catData.data[0].idCategoria) }));
       }
     } catch (err) {
-      setError("Error cargando datos.");
+      console.error('Error cargando datos:', err);
+      const message = err.response?.data?.message || err.message || 'Error cargando datos.';
+      setError(message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFilesChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    // limitar a 10
+    if (files.length > 10) {
+      setError('Máximo 10 imágenes permitidas.');
+      return;
+    }
+    setProductFiles(files);
   };
 
   const getCategoryName = (idCategoria) => {
@@ -52,20 +65,27 @@ function ProductsAdmin() {
     setError("");
     setLoading(true);
     try {
-      const res = await api.post('/prendas', {
-        nombre_prenda: productForm.nombre_prenda,
-        idCategoria: Number(productForm.idCategoria),
-        precio_alquiler: Number(productForm.precio_alquiler),
-        talla: productForm.talla,
-        color: productForm.color,
-        descripcion: productForm.descripcion,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      setProducts(prev => [data.data, ...prev]);
-      setProductForm({ ...emptyForm, idCategoria: String(categories[0]?.idCategoria || "") });
+      // enviar multipart/form-data si hay imágenes
+      let res;
+      if (productFiles && productFiles.length > 0) {
+        const form = new FormData();
+        form.append('nombre_prenda', productForm.nombre_prenda);
+        form.append('idCategoria', productForm.idCategoria);
+        form.append('precio_alquiler', productForm.precio_alquiler);
+        form.append('talla', productForm.talla);
+        form.append('color', productForm.color);
+        form.append('descripcion', productForm.descripcion);
+        productFiles.slice(0,10).forEach(f => form.append('images', f));
+        res = await api.post('/api/prendas', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+        const data = res.data;
+        setProducts(prev => [data.data, ...prev]);
+        setProductForm({ ...emptyForm, idCategoria: String(categories[0]?.idCategoria || "") });
+        setProductFiles([]);
+      } else {
+        setError('Debe subir al menos una imagen para el producto.');
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Error al crear producto');
     } finally {
       setLoading(false);
     }
@@ -76,20 +96,31 @@ function ProductsAdmin() {
     setError("");
     setLoading(true);
     try {
-      const res = await api.put(`/prendas/${editingProduct.idPrenda}`, {
-        nombre_prenda: editingProduct.nombre_prenda,
-        idCategoria: Number(editingProduct.idCategoria),
-        precio_alquiler: Number(editingProduct.precio_alquiler),
-        talla: editingProduct.talla,
-        color: editingProduct.color,
-        descripcion: editingProduct.descripcion,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      // preparar formData para enviar cambios y archivos nuevos / eliminar imágenes
+      const form = new FormData();
+      form.append('nombre_prenda', editingProduct.nombre_prenda);
+      form.append('idCategoria', editingProduct.idCategoria);
+      form.append('precio_alquiler', editingProduct.precio_alquiler);
+      form.append('talla', editingProduct.talla || '');
+      form.append('color', editingProduct.color || '');
+      form.append('descripcion', editingProduct.descripcion || '');
+
+      // imágenes a eliminar (marcadas en editingProduct.removeImageIds)
+      if (editingProduct.removeImageIds && editingProduct.removeImageIds.length > 0) {
+        form.append('remove_image_ids', JSON.stringify(editingProduct.removeImageIds));
+      }
+
+      // nuevas imágenes a subir
+      if (editingProduct.newFiles && editingProduct.newFiles.length > 0) {
+        editingProduct.newFiles.slice(0,10).forEach(f => form.append('images', f));
+      }
+
+      const res = await api.put(`/api/prendas/${editingProduct.idPrenda}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const data = res.data;
       setProducts(prev => prev.map(p => p.idPrenda === editingProduct.idPrenda ? data.data : p));
       setEditingProduct(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Error actualizando producto');
     } finally {
       setLoading(false);
     }
@@ -98,8 +129,8 @@ function ProductsAdmin() {
   const handleDelete = async (id) => {
     if (!confirm("¿Eliminar este producto?")) return;
     try {
-      const res = await api.delete(`/prendas/${id}`);
-      if (!res.ok) { const d = await res.json(); throw new Error(d.message); }
+      const res = await api.delete(`/api/prendas/${id}`);
+      const data = res.data;
       setProducts(prev => prev.filter(p => p.idPrenda !== id));
     } catch (err) {
       setError(err.message);
@@ -132,21 +163,30 @@ function ProductsAdmin() {
 
         <div className="dashboard-card">
           <h2>Agregar Producto</h2>
-          <form className="form-container" onSubmit={handleCreate}>
+          <form className="form-container centered-card" onSubmit={handleCreate}>
             <input type="text" placeholder="Nombre del producto" value={productForm.nombre_prenda}
               onChange={e => setProductForm({ ...productForm, nombre_prenda: e.target.value })} required />
             <select value={productForm.idCategoria}
               onChange={e => setProductForm({ ...productForm, idCategoria: e.target.value })} className="role-select">
-              {categories.map(c => <option key={c.idCategoria} value={c.idCategoria}>{c.nombre}</option>)}
+              {categories.map(c => <option key={c.idCategoria} value={String(c.idCategoria)}>{c.nombre}</option>)}
             </select>
             <input type="number" placeholder="Precio alquiler" value={productForm.precio_alquiler}
               onChange={e => setProductForm({ ...productForm, precio_alquiler: e.target.value })} required />
-            <input type="text" placeholder="Talla (opcional)" value={productForm.talla}
-              onChange={e => setProductForm({ ...productForm, talla: e.target.value })} />
-            <input type="text" placeholder="Color (opcional)" value={productForm.color}
-              onChange={e => setProductForm({ ...productForm, color: e.target.value })} />
-            <input type="text" placeholder="Descripción (opcional)" value={productForm.descripcion}
-              onChange={e => setProductForm({ ...productForm, descripcion: e.target.value })} />
+            <input type="text" placeholder="Talla" value={productForm.talla}
+              onChange={e => setProductForm({ ...productForm, talla: e.target.value })} required />
+            <input type="text" placeholder="Color" value={productForm.color}
+              onChange={e => setProductForm({ ...productForm, color: e.target.value })} required />
+            <textarea rows={10} placeholder="Descripción" value={productForm.descripcion}
+              onChange={e => setProductForm({ ...productForm, descripcion: e.target.value })} required style={{resize:'vertical', overflowY:'auto'}} />
+            <div style={{gridColumn: '1/-1'}}>
+              <label style={{display:'block', marginBottom:8}}>Imágenes (1-10):</label>
+              <input type="file" accept="image/*" multiple onChange={handleFilesChange} />
+              {productFiles.length > 0 && (
+                <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
+                  {productFiles.map((f,i)=> <img key={i} src={URL.createObjectURL(f)} alt={f.name} style={{width:80,height:80,objectFit:'cover',borderRadius:8}}/>) }
+                </div>
+              )}
+            </div>
             <button className="btn btn-primary" type="submit" disabled={loading}>
               {loading ? "Guardando..." : "Guardar Producto"}
             </button>
@@ -157,15 +197,20 @@ function ProductsAdmin() {
           <h2>Productos registrados</h2>
           <table className="data-table">
             <thead>
-              <tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Talla</th><th>Acciones</th></tr>
+              <tr><th>Nombre</th><th>Categoría</th><th>Imagen</th><th>Precio</th><th>Talla</th><th>Acciones</th></tr>
             </thead>
             <tbody>
               {products.length === 0 ? (
-                <tr><td colSpan="5" style={{ textAlign: "center" }}>No hay productos.</td></tr>
+                <tr><td colSpan="6" style={{ textAlign: "center" }}>No hay productos.</td></tr>
               ) : products.map(p => (
                 <tr key={p.idPrenda}>
                   <td>{p.nombre_prenda}</td>
                   <td>{getCategoryName(p.idCategoria)}</td>
+                  <td>
+                    {p.images && p.images[0] ? (
+                      <img src={p.images[0].url} alt="thumb" style={{width:80,height:80,objectFit:'cover',borderRadius:8}} />
+                    ) : <div style={{width:80,height:80,background:'#f0f0f0',borderRadius:8}}/>}
+                  </td>
                   <td>${Number(p.precio_alquiler).toLocaleString()}</td>
                   <td>{p.talla || "-"}</td>
                   <td style={{ display: "flex", gap: "8px" }}>
@@ -192,11 +237,45 @@ function ProductsAdmin() {
                 <input type="number" placeholder="Precio" value={editingProduct.precio_alquiler}
                   onChange={e => setEditingProduct({ ...editingProduct, precio_alquiler: e.target.value })} required />
                 <input type="text" placeholder="Talla" value={editingProduct.talla || ""}
-                  onChange={e => setEditingProduct({ ...editingProduct, talla: e.target.value })} />
+                  onChange={e => setEditingProduct({ ...editingProduct, talla: e.target.value })} required />
                 <input type="text" placeholder="Color" value={editingProduct.color || ""}
-                  onChange={e => setEditingProduct({ ...editingProduct, color: e.target.value })} />
-                <input type="text" placeholder="Descripción" value={editingProduct.descripcion || ""}
-                  onChange={e => setEditingProduct({ ...editingProduct, descripcion: e.target.value })} />
+                  onChange={e => setEditingProduct({ ...editingProduct, color: e.target.value })} required />
+                <textarea rows={10} placeholder="Descripción" value={editingProduct.descripcion || ""}
+                  onChange={e => setEditingProduct({ ...editingProduct, descripcion: e.target.value })} required style={{resize:'vertical', overflowY:'auto'}} />
+
+                <div style={{gridColumn:'1/-1'}}>
+                  <label style={{display:'block',marginBottom:8}}>Imágenes actuales (marcar para eliminar):</label>
+                  <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+                    {(editingProduct.images || []).map(img => (
+                      <div key={img.idImagen} style={{position:'relative'}}>
+                        <img src={img.url} alt="img" style={{width:90,height:90,objectFit:'cover',borderRadius:8}} />
+                        <label style={{display:'block',textAlign:'center'}}>
+                          <input type="checkbox" onChange={e => {
+                            const remove = editingProduct.removeImageIds ? [...editingProduct.removeImageIds] : [];
+                            if (e.target.checked) remove.push(img.idImagen); else {
+                              const idx = remove.indexOf(img.idImagen); if (idx>=0) remove.splice(idx,1);
+                            }
+                            setEditingProduct({ ...editingProduct, removeImageIds: remove });
+                          }} /> Eliminar
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+
+                  <label style={{display:'block', marginTop:12, marginBottom:8}}>Agregar nuevas imágenes (máx 10 totales):</label>
+                  <input type="file" accept="image/*" multiple onChange={e => {
+                    const files = Array.from(e.target.files || []);
+                    const currentCount = (editingProduct.images || []).length - (editingProduct.removeImageIds?.length || 0);
+                    if (currentCount + files.length > 10) { setError('Máximo 10 imágenes en total.'); return; }
+                    setEditingProduct({ ...editingProduct, newFiles: files });
+                  }} />
+                  {editingProduct.newFiles && editingProduct.newFiles.length > 0 && (
+                    <div style={{display:'flex',gap:8,marginTop:8}}>
+                      {editingProduct.newFiles.map((f,i)=> <img key={i} src={URL.createObjectURL(f)} alt={f.name} style={{width:80,height:80,objectFit:'cover',borderRadius:8}}/>) }
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ display: "flex", gap: "8px" }}>
                   <button className="btn btn-primary" type="submit" disabled={loading}>
                     {loading ? "Guardando..." : "Guardar cambios"}

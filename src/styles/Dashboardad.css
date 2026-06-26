@@ -100,6 +100,29 @@
     gap:15px;
 }
 
+/* Centrar tarjeta / formulario de agregar producto */
+.centered-card{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+}
+
+/* Textarea más grande y con scroll */
+.form-container textarea{
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  font-size:15px;
+  outline:none;
+  background:white;
+  color:var(--primary-dark);
+  grid-column: span 1;
+  min-height: 220px; /* aprox 10 renglones */
+  max-height: 420px;
+  overflow-y: auto;
+}
+
 .form-container input,
 .form-container select,
 .form-container .role-select{

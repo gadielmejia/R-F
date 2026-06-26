@@ -32,8 +32,8 @@ function DashboardUser() {
         api.get("/prendas"),
         api.get("/categorias"),
       ]);
-      const prodData = await prodRes.json();
-      const catData = await catRes.json();
+      const prodData = prodRes.data;
+      const catData = catRes.data;
       setProducts(prodData.data || []);
       setCategories(catData.data || []);
     } catch (err) {
