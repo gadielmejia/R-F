@@ -16,7 +16,7 @@ async function hashPassword(pw) {
 
 function measureStrength(pw) {
   let score = 0;
-  if (pw.length >= 8)  score++;
+  if (pw.length >= 0)  score++;
   if (pw.length >= 12) score++;
   if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
   if (/\d/.test(pw))   score++;
