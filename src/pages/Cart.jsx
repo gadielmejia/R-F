@@ -46,9 +46,9 @@ function Cart() {
   const logout = () => {
     localStorage.removeItem("currentUser");
     navigate("/login");
+    localStorage.clear(); 
+    navigate("/login");
   };
-
-  const logout = () => { localStorage.clear(); navigate("/login"); };
 
   // Pantalla de comprobante
   if (comprobante) {
