@@ -1,16 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { useTheme } from "../context/ThemeContext";
 import "../styles/citas.css"; // Ruta a tu nueva hoja de estilos
 
 function CitasUser() {
 const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   // 1. Estados Globales (Tema y Usuario)
-    const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
-    });
-
     const [currentUser] = useState(() => {
     return JSON.parse(localStorage.getItem("currentUser")) || { nombre: "Alejandro", email: "alejo@mail.com" };
     });
@@ -41,10 +39,8 @@ const navigate = useNavigate();
     }
     }, [navigate]);
 
-    const toggleTheme = () => {
-    const nextTheme = !darkMode;
-    setDarkMode(nextTheme);
-    localStorage.setItem("theme", nextTheme ? "dark" : "light");
+    const handleToggleTheme = () => {
+      toggleTheme();
     };
 
   // Guardar cita
@@ -84,7 +80,7 @@ const navigate = useNavigate();
     };
 
     return (
-    <div className={`citas-page ${darkMode ? "dark" : ""}`}>
+    <div className={`citas-page ${theme === "dark" ? "dark" : ""}`}>
     
       {/* NOTIFICACIÓN ESTILO APPLE */}
         <div className={`apple-notification-toast ${toast.show ? "show" : ""}`}>
@@ -110,7 +106,7 @@ const navigate = useNavigate();
         <div className="login-nav-inner">
             <h2 className="login-logo">RentStyle</h2>
             <div className="login-nav-links">
-            <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Cambiar tema">
+            <button className="theme-toggle-nav" onClick={handleToggleTheme} aria-label="Cambiar tema">
                 <div className="theme-icon-nav"></div>
             </button>
             <Link to="/dashboarduser">Catálogo</Link>

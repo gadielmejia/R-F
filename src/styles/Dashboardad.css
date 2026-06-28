@@ -96,16 +96,74 @@
 
 .form-container{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:15px;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:20px;
+    width:100%;
+    max-width:960px;
+    align-items:start;
+    grid-auto-rows:minmax(min-content, auto);
 }
 
 /* Centrar tarjeta / formulario de agregar producto */
 .centered-card{
+  margin:0 auto;
+  width:100%;
+}
+
+.product-form-card{
+  margin:0 auto 30px;
+  max-width:760px;
+}
+
+/* Estilo para el bloque de subida de imágenes, centrado dentro de la tarjeta */
+.file-upload-group{
+  grid-column: 1 / -1;
   display:flex;
   flex-direction:column;
-  align-items:center;
-  justify-content:center;
+  align-items:flex-start;
+  gap:10px;
+  width:100%;
+}
+
+.file-upload-group input[type="file"]{
+  width:100%;
+  padding: 12px 14px;
+  border: 1px solid #d6e4d1;
+  border-radius: 12px;
+  background: #f8faf5;
+  color: #1f2937;
+  cursor: pointer;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.file-upload-group input[type="file"]::-webkit-file-upload-button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #eaf6ea;
+  color: #19481f;
+  cursor: pointer;
+}
+
+.file-upload-group input[type="file"]::file-selector-button {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #eaf6ea;
+  color: #19481f;
+  cursor: pointer;
+}
+
+.file-upload-group label{
+  width:100%;
+  text-align:left;
+  font-weight:600;
+}
+
+.file-upload-group input[type="file"]{
+  width:100%;
+  max-width:100%;
 }
 
 /* Textarea más grande y con scroll */
@@ -117,7 +175,7 @@
   outline:none;
   background:white;
   color:var(--primary-dark);
-  grid-column: span 1;
+  grid-column: 1 / -1;
   min-height: 220px; /* aprox 10 renglones */
   max-height: 420px;
   overflow-y: auto;
@@ -125,7 +183,9 @@
 
 .form-container input,
 .form-container select,
+.form-container textarea,
 .form-container .role-select{
+    width:100%;
     padding:14px;
     border:1px solid var(--border);
     border-radius:12px;
@@ -133,6 +193,33 @@
     outline:none;
     background:white;
     color:var(--primary-dark);
+    box-sizing:border-box;
+}
+
+.form-container input[type="text"],
+.form-container input[type="number"],
+.form-container select,
+.form-container .role-select{
+    min-height:50px;
+}
+
+.form-container input[type="text"][placeholder="Color"],
+.form-container input[type="text"][placeholder="Talla"],
+.form-container input[type="number"]{
+    min-height:48px;
+    padding:12px 14px;
+}
+
+.form-container textarea{
+    grid-column: 1 / -1;
+    min-height: 180px;
+    max-height: 320px;
+}
+
+.form-container button {
+    grid-column: 1 / -1;
+    width:100%;
+    justify-self:start;
 }
 
 .form-container input:focus,
