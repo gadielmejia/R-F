@@ -54,6 +54,8 @@ const handleSubmit = async (e) => {
 
         if (usuario.rol_nombre === 'admin') {
             navigate('/dashboardadmin', { replace: true });
+        } else if (usuario.rol_nombre === 'empleado') {
+            navigate('/dashboardempleado', { replace: true });
         } else {
             navigate('/dashboarduser', { replace: true });
         }
