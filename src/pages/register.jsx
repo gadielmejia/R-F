@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { useTheme } from '../context/ThemeContext';
 import Footer from '../components/Footer';
 import '../styles/register.css';
 
@@ -53,7 +54,7 @@ export default function Register() {
   const [dragging,     setDragging]     = useState(false);
   const [loading,      setLoading]      = useState(false);
   const [toast,        setToast]        = useState({ show: false, msg: '', type: 'success' });
-  const [darkMode,     setDarkMode]     = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const avatarInputRef = useRef(null);
   const toastTimer     = useRef(null);
@@ -216,7 +217,7 @@ const handleSubmit = async (e) => {
         <div className="register-nav-inner">
           <h2 className="register-logo">RentStyle</h2>
           <div className="register-nav-links">
-            <button className="theme-toggle-register" onClick={() => setDarkMode(!darkMode)}>
+            <button className="theme-toggle-register" onClick={toggleTheme}>
               <div className="theme-icon-register" />
             </button>
             <a href="/">Inicio</a>
@@ -225,7 +226,7 @@ const handleSubmit = async (e) => {
         </div>
       </nav>
 
-      <div className={`register-page${darkMode ? ' dark' : ''}`}>
+      <div className={`register-page${theme === 'dark' ? ' dark' : ''}`}>
 
         <div className="register-left">
           <span className="register-welcome">BIENVENIDO A</span>

@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { useTheme } from "../context/ThemeContext";
 import "../styles/profile.css"; // Ruta hacia los estilos de perfil
 
 function Profile() {
   const navigate = useNavigate();
 
   // 1. Estado del Modo Oscuro
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
-  });
+  const { theme, toggleTheme } = useTheme();
 
   // 2. Cargar datos del usuario logueado en tiempo real
   const [currentUser, setCurrentUser] = useState(() => {
@@ -35,10 +34,8 @@ function Profile() {
     }
   }, [navigate]);
 
-  const toggleTheme = () => {
-    const nextTheme = !darkMode;
-    setDarkMode(nextTheme);
-    localStorage.setItem("theme", nextTheme ? "dark" : "light");
+  const handleToggleTheme = () => {
+    toggleTheme();
   };
 
   // Manejar la subida de foto y transformarla a Base64 para guardarla en LocalStorage
@@ -79,7 +76,7 @@ function Profile() {
   };
 
   return (
-    <div className={`profile-page ${darkMode ? "dark" : ""}`}>
+    <div className={`profile-page ${theme === "dark" ? "dark" : ""}`}>
       
       {/* NOTIFICACIÓN ESTILO APPLE */}
       <div className={`apple-notification-toast ${toast.show ? "show" : ""}`}>
@@ -103,7 +100,7 @@ function Profile() {
         <div className="login-nav-inner">
           <h2 className="login-logo">RentStyle</h2>
           <div className="login-nav-links">
-            <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Cambiar tema">
+            <button className="theme-toggle-nav" onClick={handleToggleTheme} aria-label="Cambiar tema">
               <div className="theme-icon-nav"></div>
             </button>
             <Link to="/dashboarduser">Catálogo</Link>

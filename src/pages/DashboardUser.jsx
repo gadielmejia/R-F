@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { api } from "../utils/api";
+import { useTheme } from "../context/ThemeContext";
 import "../styles/dashboardUser.css";
 import vestidoverde from "../assets/vestidoverde.jpg";
 import vestidonegro from "../assets/vestidonregro.jpg";
@@ -11,15 +13,21 @@ import vestidodorado from "../assets/vestidodorado.png";
 function DashboardUser() {
   const navigate = useNavigate();
   
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark";
-  });
+  const { theme, toggleTheme } = useTheme();
 
   const [userName] = useState(() => {
     const user = JSON.parse(localStorage.getItem("currentUser"));
     return user ? (user.nombre || "Alejandro") : "Alejandro";
   });
-  
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filterCategoria, setFilterCategoria] = useState("");
+  const [filterTalla, setFilterTalla] = useState("");
+  const [filterColor, setFilterColor] = useState("");
+  const [filterPrecioMax, setFilterPrecioMax] = useState("");
+  const [sortBy, setSortBy] = useState("nombre");
+  const [loading, setLoading] = useState(false);
   const [showGreeting, setShowGreeting] = useState(true);
 
   // --- ESTADOS PARA LA NOTIFICACIÓN ESTILO APPLE ---
@@ -37,14 +45,31 @@ function DashboardUser() {
     const user = JSON.parse(localStorage.getItem("currentUser"));
     if (!user || user.role !== "user") {
       navigate("/login");
+      return;
     }
     loadData();
   }, [navigate]);
 
-  const toggleTheme = () => {
-    const nextTheme = !darkMode;
-    setDarkMode(nextTheme);
-    localStorage.setItem("theme", nextTheme ? "dark" : "light");
+  const handleToggleTheme = () => {
+    toggleTheme();
+  };
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [prodRes, catRes] = await Promise.all([
+        api.get('/api/prendas'),
+        api.get('/api/categorias'),
+      ]);
+      const prodData = prodRes.data || prodRes;
+      const catData = catRes.data || catRes;
+      setProducts(prodData.data || prodData || []);
+      setCategories(catData.data || catData || []);
+    } catch (err) {
+      console.error('Error loading dashboard data', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // --- FUNCIÓN DE AGREGAR AL CARRITO CONFIGURADA CON TOAST ---
@@ -129,7 +154,7 @@ function DashboardUser() {
   };
 
   return (
-    <div className={`dashboard-page ${darkMode ? "dark" : ""}`}>
+    <div className={`dashboard-page ${theme === "dark" ? "dark" : ""}`}>
       
       {/* NOTIFICACIÓN ESTILO APPLE (Sutil y flotante) */}
       <div className={`apple-notification-toast ${toast.show ? "show" : ""}`}>
@@ -154,7 +179,7 @@ function DashboardUser() {
         <div className="login-nav-inner">
           <h2 className="login-logo">RentStyle</h2>
           <div className="login-nav-links">
-            <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Cambiar tema">
+            <button className="theme-toggle-nav" onClick={handleToggleTheme} aria-label="Cambiar tema">
               <div className="theme-icon-nav"></div>
             </button>
             <Link to="/cart">Carrito</Link>

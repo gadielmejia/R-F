@@ -161,7 +161,7 @@ function ProductsAdmin() {
 
         {error && <p className="field-alert">⚠ {error}</p>}
 
-        <div className="dashboard-card">
+        <div className="dashboard-card product-form-card">
           <h2>Agregar Producto</h2>
           <form className="form-container centered-card" onSubmit={handleCreate}>
             <input type="text" placeholder="Nombre del producto" value={productForm.nombre_prenda}
@@ -178,11 +178,11 @@ function ProductsAdmin() {
               onChange={e => setProductForm({ ...productForm, color: e.target.value })} required />
             <textarea rows={10} placeholder="Descripción" value={productForm.descripcion}
               onChange={e => setProductForm({ ...productForm, descripcion: e.target.value })} required style={{resize:'vertical', overflowY:'auto'}} />
-            <div style={{gridColumn: '1/-1'}}>
-              <label style={{display:'block', marginBottom:8}}>Imágenes (1-10):</label>
+            <div className="file-upload-group">
+              <label>Imágenes (1-10):</label>
               <input type="file" accept="image/*" multiple onChange={handleFilesChange} />
               {productFiles.length > 0 && (
-                <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap'}}>
+                <div style={{display:'flex',gap:8,marginTop:8,flexWrap:'wrap', justifyContent:'center'}}>
                   {productFiles.map((f,i)=> <img key={i} src={URL.createObjectURL(f)} alt={f.name} style={{width:80,height:80,objectFit:'cover',borderRadius:8}}/>) }
                 </div>
               )}

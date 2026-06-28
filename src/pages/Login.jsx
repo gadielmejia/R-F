@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import { useTheme } from "../context/ThemeContext";
 import "../styles/login.css";
 
 function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [darkMode, setDarkMode] = useState(false);
+    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
 
     const normalizeUser = (user) => {
@@ -68,15 +69,15 @@ const handleSubmit = async (e) => {
                 <h2 className="login-logo">RentStyle</h2>
 
                 <div className="login-nav-links">
-                    <button className="theme-toggle-nav"onClick={() => setDarkMode(!darkMode)}>
-                    <div className="theme-icon-nav"></div>
-                        </button>
-                        <a href="/">Inicio</a>
+                    <button className="theme-toggle-nav" onClick={toggleTheme}>
+                      <div className="theme-icon-nav"></div>
+                    </button>
+                    <a href="/">Inicio</a>
                         <a href="/registro">Registrarse</a>
                     </div>
                 </div>
             </nav>
-            <div className={`login-page ${darkMode ? "dark" : ""}`}>
+            <div className={`login-page ${theme === "dark" ? "dark" : ""}`}>
                 <div className="login-left">
                         <span className="welcome-text">BIENVENIDO A</span>
                         <h1>RentStyle</h1>
