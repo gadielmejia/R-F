@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
-import { api } from "../utils/api";
-import { useTheme } from "../context/ThemeContext";
 import "../styles/dashboardUser.css";
 import vestidoverde from "../assets/vestidoverde.jpg";
 import vestidonegro from "../assets/vestidonregro.jpg";
@@ -33,6 +31,33 @@ function DashboardUser() {
   // --- ESTADOS PARA LA NOTIFICACIÓN ESTILO APPLE ---
   const [toast, setToast] = useState({ show: false, message: "" });
   const [toastTimeoutId, setToastTimeoutId] = useState(null);
+
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [search, setSearch] = useState("");
+  const [filterCategoria, setFilterCategoria] = useState("");
+  const [filterTalla, setFilterTalla] = useState("");
+  const [filterColor, setFilterColor] = useState("");
+  const [filterPrecioMax, setFilterPrecioMax] = useState("");
+  const [sortBy, setSortBy] = useState("nombre");
+  const [loading, setLoading] = useState(false);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [prodRes, catRes] = await Promise.all([
+        api.get("/api/prendas"),
+        api.get("/api/categorias")
+      ]);
+
+      setProducts(prodRes.data?.data || []);
+      setCategories(catRes.data?.data || []);
+    } catch (error) {
+      console.error("Error cargando datos en DashboardUser:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {

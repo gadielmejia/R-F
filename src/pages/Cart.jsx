@@ -1,25 +1,18 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import { useTheme } from "../context/ThemeContext";
-import "../styles/cart.css"; // Ruta hacia tus estilos del carrito
+import "../styles/cart.css";
 
 function Cart() {
   const navigate = useNavigate();
-
   const { theme, toggleTheme } = useTheme();
 
-  const handleToggleTheme = () => {
-    toggleTheme();
-  };
-
-  // 2. Estado para los productos del carrito
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem("cart");
     return savedCart ? JSON.parse(savedCart) : [];
   });
 
-  // Proteger la ruta por si no hay usuario
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser"));
     if (!user) {
@@ -27,33 +20,37 @@ function Cart() {
     }
   }, [navigate]);
 
-  // Eliminar un producto específico del carrito
   const removeItem = (indexToRemove) => {
     const updatedCart = cartItems.filter((_, index) => index !== indexToRemove);
     setCartItems(updatedCart);
     localStorage.setItem("cart", JSON.stringify(updatedCart));
   };
 
-  // Calcular el total de la orden
   const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + item.price, 0);
+    return cartItems.reduce((total, item) => total + Number(item.price || 0), 0);
   };
 
   const logout = () => {
-    localStorage.removeItem("currentUser");
+    localStorage.clear();
     navigate("/login");
+  };
+
+  const checkout = () => {
+    if (cartItems.length === 0) {
+      alert("No hay prendas en el carrito.");
+      return;
+    }
+    alert("¡Procediendo al pago seguro!");
   };
 
   return (
     <div className={`cart-page ${theme === "dark" ? "dark" : ""}`}>
-      
-      {/* NAVBAR FIJO BLANCO (Idéntico a los anteriores) */}
       <nav className="login-nav">
         <div className="login-nav-inner">
           <h2 className="login-logo">RentStyle</h2>
           <div className="login-nav-links">
-            <button className="theme-toggle-nav" onClick={handleToggleTheme} aria-label="Cambiar tema">
-              <div className="theme-icon-nav"></div>
+            <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Cambiar tema">
+              <div className="theme-icon-nav" />
             </button>
             <Link to="/dashboarduser">Catálogo</Link>
             <Link to="/cart" className="active-link">Carrito</Link>
@@ -64,7 +61,6 @@ function Cart() {
         </div>
       </nav>
 
-      {/* CONTENIDO PRINCIPAL */}
       <main className="cart-container">
         <div className="cart-header">
           <h2>Mi Carrito</h2>
@@ -72,36 +68,31 @@ function Cart() {
         </div>
 
         {cartItems.length === 0 ? (
-          /* ESTADO VACÍO (Tal cual se ve en tu imagen image_245e5f.png) */
           <div className="empty-cart-card">
             <h3>Tu carrito está vacío</h3>
             <p>Agrega prendas desde el catálogo.</p>
             <Link to="/dashboarduser" className="back-catalog-btn">Ir al Catálogo</Link>
           </div>
         ) : (
-          /* ESTADO CON PRODUCTOS */
           <div className="cart-content-grid">
-            
-            {/* Lista de productos */}
             <div className="cart-items-list">
               {cartItems.map((item, index) => (
                 <div key={index} className="cart-item-row">
                   <img src={item.image} alt={item.title} className="cart-item-img" />
                   <div className="cart-item-details">
                     <h4>{item.title}</h4>
-                    <span className="cart-item-price">${item.price.toLocaleString("es-CO")}</span>
+                    <span className="cart-item-price">${Number(item.price || 0).toLocaleString("es-CO")}</span>
                   </div>
                   <button className="remove-item-btn" onClick={() => removeItem(index)} aria-label="Eliminar producto">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
                     </svg>
                   </button>
                 </div>
               ))}
             </div>
 
-            {/* Resumen de pago */}
             <div className="cart-summary-card">
               <h3>Resumen del Pedido</h3>
               <hr className="summary-divider" />
@@ -118,16 +109,14 @@ function Cart() {
                 <span>Total</span>
                 <strong>${calculateTotal().toLocaleString("es-CO")}</strong>
               </div>
-              <button className="checkout-btn" onClick={() => alert("¡Procediendo al pago seguro!")}>
+              <button className="checkout-btn" onClick={checkout}>
                 Finalizar Alquiler
               </button>
             </div>
-
           </div>
         )}
       </main>
 
-      {/* FOOTER FIJO BLANCO */}
       <Footer />
     </div>
   );
