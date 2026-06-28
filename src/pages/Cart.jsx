@@ -8,8 +8,6 @@ function Cart() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
-  const { theme, toggleTheme } = useTheme();
-
   const handleToggleTheme = () => {
     toggleTheme();
   };
