@@ -2,12 +2,19 @@
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import { useTheme } from "../context/ThemeContext";
-import "../styles/cart.css";
+import "../styles/cart.css"; // Ruta hacia tus estilos del carrito
 
 function Cart() {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
+  const { theme, toggleTheme } = useTheme();
+
+  const handleToggleTheme = () => {
+    toggleTheme();
+  };
+
+  // 2. Estado para los productos del carrito
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem("cart");
     return savedCart ? JSON.parse(savedCart) : [];
@@ -20,6 +27,7 @@ function Cart() {
     }
   }, [navigate]);
 
+  // Eliminar un producto específico del carrito
   const removeItem = (indexToRemove) => {
     const updatedCart = cartItems.filter((_, index) => index !== indexToRemove);
     setCartItems(updatedCart);
@@ -33,24 +41,20 @@ function Cart() {
   const logout = () => {
     localStorage.clear();
     navigate("/login");
-  };
-
-  const checkout = () => {
-    if (cartItems.length === 0) {
-      alert("No hay prendas en el carrito.");
-      return;
-    }
-    alert("¡Procediendo al pago seguro!");
+    localStorage.clear(); 
+    navigate("/login");
   };
 
   return (
     <div className={`cart-page ${theme === "dark" ? "dark" : ""}`}>
+      
+      {/* NAVBAR FIJO BLANCO (Idéntico a los anteriores) */}
       <nav className="login-nav">
         <div className="login-nav-inner">
           <h2 className="login-logo">RentStyle</h2>
           <div className="login-nav-links">
-            <button className="theme-toggle-nav" onClick={toggleTheme} aria-label="Cambiar tema">
-              <div className="theme-icon-nav" />
+            <button className="theme-toggle-nav" onClick={handleToggleTheme} aria-label="Cambiar tema">
+              <div className="theme-icon-nav"></div>
             </button>
             <Link to="/dashboarduser">Catálogo</Link>
             <Link to="/cart" className="active-link">Carrito</Link>
