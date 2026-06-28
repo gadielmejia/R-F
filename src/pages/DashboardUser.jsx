@@ -72,29 +72,34 @@ function DashboardUser() {
     }
   };
 
-  // --- FUNCIÓN DE AGREGAR AL CARRITO CONFIGURADA CON TOAST ---
-  const addToCart = (id, title, price, image) => {
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    cart.push({ id, title, price, image });
-    localStorage.setItem("cart", JSON.stringify(cart));
-    
-    // Si ya había una notificación activa, limpiamos su temporizador para que no se corte antes
-    if (toastTimeoutId) clearTimeout(toastTimeoutId);
-
-    // Activamos la notificación iOS
-    setToast({ show: true, message: `"${title}" se agregó al carrito.` });
-
-    // Se oculta automáticamente tras 3 segundos
-    const newTimeout = setTimeout(() => {
-      setToast({ show: false, message: "" });
-    }, 3000);
-    
-    setToastTimeoutId(newTimeout);
-  };
-
   const getCategoryName = (idCategoria) => {
     const cat = categories.find((c) => String(c.idCategoria) === String(idCategoria));
     return cat?.nombre || "";
+  };
+
+  const getProductImage = (product) => {
+    return product?.images?.[0]?.url || "";
+  };
+
+  const addToCart = (product) => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const item = {
+      id: product.idPrenda,
+      title: product.nombre_prenda,
+      price: Number(product.precio_alquiler),
+      image: getProductImage(product),
+    };
+
+    cart.push(item);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    
+    if (toastTimeoutId) clearTimeout(toastTimeoutId);
+
+    setToast({ show: true, message: `"${item.title}" se agregó al carrito.` });
+    const newTimeout = setTimeout(() => {
+      setToast({ show: false, message: "" });
+    }, 3000);
+    setToastTimeoutId(newTimeout);
   };
 
   // Tallas y colores únicos para los filtros
@@ -205,73 +210,6 @@ function DashboardUser() {
           </div>
         </div>
 
-        <div className="products-grid">
-          <article className="product-card card animated-card" style={{ animationDelay: "0.1s" }}>
-            <img src={vestidoverde} alt="Vestido Verde" />
-            <div className="product-card-content">
-              <h3>Vestido de Gala Verde Jade</h3>
-              <p className="category">Gala</p>
-              <p className="details">Talla M · Stock 4</p>
-              <strong className="price">$180.000</strong>
-              <button onClick={() => addToCart(1, "Vestido de Gala Verde Jade", 180000, vestidoverde)}>
-                Agregar al carrito
-              </button>
-            </div>
-          </article>
-
-          <article className="product-card card animated-card" style={{ animationDelay: "0.2s" }}>
-            <img src={vestidonegro} alt="Vestido Negro" />
-            <div className="product-card-content">
-              <h3>Vestido Elegante Negro</h3>
-              <p className="category">Cóctel</p>
-              <p className="details">Talla S · Stock 3</p>
-              <strong className="price">$150.000</strong>
-              <button onClick={() => addToCart(2, "Vestido Elegante Negro", 150000, vestidonegro)}>
-                Agregar al carrito
-              </button>
-            </div>
-          </article>
-
-          <article className="product-card card animated-card" style={{ animationDelay: "0.3s" }}>
-            <img src={vestidoazul} alt="Vestido Azul Marino" />
-            <div className="product-card-content">
-              <h3>Vestido de Noche Azul Imperial</h3>
-              <p className="category">Gala / Grados</p>
-              <p className="details">Talla L · Stock 2</p>
-              <strong className="price">$195.000</strong>
-              <button onClick={() => addToCart(3, "Vestido de Noche Azul Imperial", 195000, vestidoazul)}>
-                Agregar al carrito
-              </button>
-            </div>
-          </article>
-
-          <article className="product-card card animated-card" style={{ animationDelay: "0.4s" }}>
-            <img src={vestidorojo} alt="Vestido Rojo" />
-            <div className="product-card-content">
-              <h3>Vestido Cóctel Rojo Pasión</h3>
-              <p className="category">Fiesta / Cóctel</p>
-              <p className="details">Talla XS · Stock 2</p>
-              <strong className="price">$160.000</strong>
-              <button onClick={() => addToCart(4, "Vestido Cóctel Rojo Pasión", 160000, vestidorojo)}>
-                Agregar al carrito
-              </button>
-            </div>
-          </article>
-
-          <article className="product-card card animated-card" style={{ animationDelay: "0.5s" }}>
-            <img src={vestidodorado} alt="Vestido Dorado" />
-            <div className="product-card-content">
-              <h3>Vestido de Noche Dorado Glam</h3>
-              <p className="category">Gala / Quinceañero</p>
-              <p className="details">Talla M · Stock 3</p>
-              <strong className="price">$185.000</strong>
-              <button onClick={() => addToCart(5, "Vestido de Noche Dorado Glam", 185000, vestidodorado)}>
-                Agregar al carrito
-              </button>
-            </div>
-          </article>
-        </div>
-
         {/* Resultados */}
         <p style={{ marginBottom: "1rem", color: "#6b7280", fontSize: "0.9rem" }}>
           {filtered.length} prenda{filtered.length !== 1 ? "s" : ""} encontrada{filtered.length !== 1 ? "s" : ""}
@@ -297,12 +235,34 @@ function DashboardUser() {
             ) : filtered.map((p) => (
               <article key={p.idPrenda} className="product-card card">
                 <div style={{
-                  background: "#f3f4f6", borderRadius: "8px",
-                  height: "140px", display: "flex", alignItems: "center",
-                  justifyContent: "center", marginBottom: "0.75rem",
-                  fontSize: "2.5rem"
+                  width: "100%",
+                  minHeight: "160px",
+                  borderRadius: "14px",
+                  overflow: "hidden",
+                  marginBottom: "0.75rem",
+                  background: "#f3f4f6",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
                 }}>
-                  👗
+                  {getProductImage(p) ? (
+                    <img
+                      src={getProductImage(p)}
+                      alt={p.nombre_prenda}
+                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: "100%",
+                      height: "160px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "2.5rem"
+                    }}>
+                      👗
+                    </div>
+                  )}
                 </div>
                 <span style={{
                   background: "#E8F5E9", color: "#1B5E20",

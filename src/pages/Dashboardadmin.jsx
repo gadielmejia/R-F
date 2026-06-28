@@ -21,14 +21,14 @@ function DashboardAdmin() {
     const loadStats = async () => {
       try {
         const [usersRes, prendasRes, reservasRes] = await Promise.all([
-          api.get('/usuarios'),
-          api.get('/prendas'),
-          api.get('/reservas'),
+          api.get('/api/usuarios'),
+          api.get('/api/prendas'),
+          api.get('/api/reservas'),
         ]);
 
-        const usersData = await usersRes.json();
-        const prendasData = await prendasRes.json();
-        const reservasData = await reservasRes.json();
+        const usersData = usersRes.data;
+        const prendasData = prendasRes.data;
+        const reservasData = reservasRes.data;
 
         setUserCount(usersData.data?.length || 0);
         setProductCount(prendasData.data?.length || 0);

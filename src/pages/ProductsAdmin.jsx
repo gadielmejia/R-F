@@ -76,7 +76,7 @@ function ProductsAdmin() {
         form.append('color', productForm.color);
         form.append('descripcion', productForm.descripcion);
         productFiles.slice(0,10).forEach(f => form.append('images', f));
-        res = await api.post('/api/prendas', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+        res = await api.post('/api/prendas', form);
         const data = res.data;
         setProducts(prev => [data.data, ...prev]);
         setProductForm({ ...emptyForm, idCategoria: String(categories[0]?.idCategoria || "") });
@@ -115,7 +115,7 @@ function ProductsAdmin() {
         editingProduct.newFiles.slice(0,10).forEach(f => form.append('images', f));
       }
 
-      const res = await api.put(`/api/prendas/${editingProduct.idPrenda}`, form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const res = await api.put(`/api/prendas/${editingProduct.idPrenda}`, form);
       const data = res.data;
       setProducts(prev => prev.map(p => p.idPrenda === editingProduct.idPrenda ? data.data : p));
       setEditingProduct(null);
