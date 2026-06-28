@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import { api } from "../utils/api";
-import { useTheme } from "../context/ThemeContext";
+import { useTheme } from "../context/ThemeContext"; 
 import "../styles/dashboardUser.css";
 import vestidoverde from "../assets/vestidoverde.jpg";
 import vestidonegro from "../assets/vestidonregro.jpg";
@@ -34,6 +34,24 @@ function DashboardUser() {
   const [toast, setToast] = useState({ show: false, message: "" });
   const [toastTimeoutId, setToastTimeoutId] = useState(null);
 
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [prodRes, catRes] = await Promise.all([
+        api.get('/api/prendas'),
+        api.get('/api/categorias'),
+      ]);
+      const prodData = prodRes.data || prodRes;
+      const catData = catRes.data || catRes;
+      setProducts(prodData.data || prodData || []);
+      setCategories(catData.data || catData || []);
+    } catch (err) {
+      console.error('Error loading dashboard data', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowGreeting(false);
@@ -52,24 +70,6 @@ function DashboardUser() {
 
   const handleToggleTheme = () => {
     toggleTheme();
-  };
-
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [prodRes, catRes] = await Promise.all([
-        api.get('/api/prendas'),
-        api.get('/api/categorias'),
-      ]);
-      const prodData = prodRes.data || prodRes;
-      const catData = catRes.data || catRes;
-      setProducts(prodData.data || prodData || []);
-      setCategories(catData.data || catData || []);
-    } catch (err) {
-      console.error('Error loading dashboard data', err);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const getCategoryName = (idCategoria) => {
