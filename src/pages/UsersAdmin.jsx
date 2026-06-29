@@ -24,7 +24,8 @@ function UsersAdmin() {
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    const role = currentUser?.role || (currentUser?.rol_nombre === "admin" ? "admin" : currentUser?.rol_nombre === "usuario" ? "user" : null);
+    const currentRol = currentUser?.rol_nombre?.toLowerCase();
+    const role = currentUser?.role || (currentRol === "admin" ? "admin" : currentRol === "usuario" ? "user" : null);
 
     if (!currentUser || role !== "admin") {
       navigate("/login", { replace: true });
@@ -235,7 +236,7 @@ function UsersAdmin() {
             />
             <input
               type="text"
-              placeholder="Documento (opcional)"
+              placeholder="Documento"
               value={userForm.documento}
               onChange={(e) => setUserForm({ ...userForm, documento: e.target.value })}
             />

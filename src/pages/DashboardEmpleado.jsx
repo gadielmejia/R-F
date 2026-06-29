@@ -11,6 +11,8 @@ function DashboardEmpleado() {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [productCount, setProductCount] = useState(0);
+  const [inventoryStats, setInventoryStats] = useState({ total: 0, disponible: 0, reservado: 0, alquilado: 0, reparacion: 0 });
 
   // Formulario nuevo usuario
   const [showForm, setShowForm] = useState(false);
@@ -23,22 +25,41 @@ function DashboardEmpleado() {
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    const rol = currentUser?.rol_nombre || currentUser?.role;
+    const rol = currentUser?.role || currentUser?.rol_nombre?.toLowerCase();
     if (!currentUser || rol !== "empleado") {
       navigate("/login", { replace: true });
       return;
     }
-    loadUsuarios();
+    loadData();
   }, [navigate]);
 
-  const loadUsuarios = async () => {
+  const loadData = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/usuarios");
-      const data = await res.json();
-      setUsuarios(data.data || []);
-    } catch {
-      setError("Error cargando usuarios.");
+      const [usuariosRes, prendasRes, inventarioRes] = await Promise.all([
+        api.get("/api/usuarios"),
+        api.get("/api/prendas"),
+        api.get("/api/inventario"),
+      ]);
+
+      const usuariosData = usuariosRes.data;
+      setUsuarios(usuariosData.data || []);
+
+      const prendasData = prendasRes.data;
+      setProductCount(prendasData.data?.length || 0);
+
+      const inventarioData = inventarioRes.data;
+      const inventario = inventarioData.data || [];
+      setInventoryStats({
+        total: inventario.length,
+        disponible: inventario.filter((item) => item.estado === "Disponible").length,
+        reservado: inventario.filter((item) => item.estado === "Reservado").length,
+        alquilado: inventario.filter((item) => item.estado === "Alquilado").length,
+        reparacion: inventario.filter((item) => item.estado === "Reparacion").length,
+      });
+    } catch (err) {
+      console.error(err);
+      setError("Error cargando datos.");
     } finally {
       setLoading(false);
     }
@@ -78,19 +99,12 @@ function DashboardEmpleado() {
 
     setSavingUser(true);
     try {
-      // Hashear contraseña
-      const encoded = new TextEncoder().encode(form.Contrasena);
-      const hashBuf = await crypto.subtle.digest('SHA-256', encoded);
-      const passwordHash = Array.from(new Uint8Array(hashBuf))
-        .map(b => b.toString(16).padStart(2, '0')).join('');
-
-      const res = await api.post("/usuarios", {
+      const res = await api.post("/api/usuarios", {
         nombre: form.nombre.trim(),
         documento: form.documento.trim(),
         telefono: form.telefono.trim() || null,
         correo: form.correo.trim().toLowerCase(),
-        Contrasena: passwordHash,
-        idRol: 2, // siempre usuario normal
+        Contrasena: form.Contrasena,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
@@ -131,6 +145,8 @@ function DashboardEmpleado() {
         <div className="nav-inner">
           <Link to="/dashboardempleado" className="brand">RentStyle</Link>
           <div className="nav-actions">
+            <Link to="/admin/productos" className="nav-link">Prendas</Link>
+            <Link to="/admin/inventario" className="nav-link">Inventario</Link>
             <span style={{ color: "#fff", fontSize: "0.85rem" }}>
               👤 {user.nombre}
             </span>
@@ -164,6 +180,13 @@ function DashboardEmpleado() {
           <div className="stat-card"><h3>Administradores</h3><p style={{ color: "#1B5E20" }}>{stats.admins}</p></div>
           <div className="stat-card"><h3>Empleados</h3><p style={{ color: "#1565C0" }}>{stats.empleados}</p></div>
           <div className="stat-card"><h3>Clientes</h3><p style={{ color: "#E65100" }}>{stats.clientes}</p></div>
+          <div className="stat-card"><h3>Prendas</h3><p>{productCount}</p></div>
+          <div className="stat-card"><h3>Inventario</h3><p>{inventoryStats.total}</p></div>
+        </div>
+
+        <div className="dashboard-buttons-row">
+          <Link to="/admin/productos" className="dashboard-button">Gestionar prendas</Link>
+          <Link to="/admin/inventario" className="dashboard-button">Gestionar inventario</Link>
         </div>
 
         {/* Botón agregar usuario */}
