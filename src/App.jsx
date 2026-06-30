@@ -4,6 +4,7 @@ import Register from './pages/register';
 import Login from './pages/Login';
 import DashboardAdmin from './pages/Dashboardadmin';
 import DashboardUser from './pages/DashboardUser';
+import DashboardEmpleado from './pages/DashboardEmpleado';
 import ProductsAdmin from './pages/ProductsAdmin';
 import UsersAdmin from './pages/UsersAdmin';
 import InventoryAdmin from './pages/InventoryAdmin';
@@ -25,6 +26,7 @@ function App() {
         <Route path="/admin/inventario" element={<InventoryAdmin />} />
         <Route path="/admin/reservas" element={<ReservasAdmin />} />
         <Route path="/dashboarduser" element={<DashboardUser />} />
+        <Route path="/dashboardempleado" element={<DashboardEmpleado />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/citas" element={<Citas/>} />

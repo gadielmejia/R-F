@@ -72,7 +72,6 @@ const handleSubmit = async (e) => {
         Contrasena: formData.password,
         documento:  formData.documento.trim(),
         telefono:   formData.telefono.trim() || null,
-        idRol:      2,
       }),
     });
 

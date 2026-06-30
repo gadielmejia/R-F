@@ -11,16 +11,19 @@ function Login() {
     const navigate = useNavigate();
 
     const normalizeUser = (user) => {
-        const role = user?.rol_nombre === "admin" || user?.role === "admin"
+        const rol = user?.rol_nombre?.toLowerCase();
+        const role = rol === "admin" || rol === "administrador"
             ? "admin"
-            : "user";
+            : rol === "empleado"
+                ? "empleado"
+                : "user";
 
         return {
             ...user,
             role,
             name: user?.nombre || user?.name || user?.correo || user?.email || "",
             email: user?.correo || user?.email || "",
-            rol_nombre: user?.rol_nombre || (role === "admin" ? "admin" : "usuario"),
+            rol_nombre: user?.rol_nombre || role,
         };
     };
 
@@ -30,7 +33,7 @@ const handleSubmit = async (e) => {
         const res = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ correo: email, Contrasena: password }),
+            body: JSON.stringify({ correo: email.trim().toLowerCase(), Contrasena: password }),
         });
         const json = await res.json();
         if (!res.ok) {
@@ -40,14 +43,14 @@ const handleSubmit = async (e) => {
 
         // Guardar token y datos de usuario
         const { token, usuario } = json.data;
+        const normalizedUser = normalizeUser(usuario);
         localStorage.setItem('token', token);
-        localStorage.setItem('currentUser', JSON.stringify({
-            ...usuario,
-            role: usuario.rol_nombre === 'admin' ? 'admin' : 'user',
-        }));
+        localStorage.setItem('currentUser', JSON.stringify(normalizedUser));
 
-        if (usuario.rol_nombre === 'admin') {
+        if (normalizedUser.role === 'admin') {
             navigate('/dashboardadmin', { replace: true });
+        } else if (normalizedUser.role === 'empleado') {
+            navigate('/dashboardempleado', { replace: true });
         } else {
             navigate('/dashboarduser', { replace: true });
         }

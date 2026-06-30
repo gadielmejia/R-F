@@ -25,7 +25,7 @@ function InventoryAdmin() {
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (!currentUser || currentUser.role !== "admin") {
+    if (!currentUser || !["admin", "empleado"].includes(currentUser.role)) {
       navigate("/login", { replace: true });
       return;
     }
@@ -36,8 +36,8 @@ function InventoryAdmin() {
     setLoading(true);
     try {
       const [invRes, prendasRes] = await Promise.all([
-        api.get('/api/inventario'),
-        api.get('/api/prendas'),
+        api.get("/api/inventario"),
+        api.get("/api/prendas"),
       ]);
       const invData = invRes.data;
       const prendasData = prendasRes.data;
@@ -90,7 +90,7 @@ function InventoryAdmin() {
     }
     setLoading(true);
     try {
-      const res = await api.post('/api/inventario', {
+      const res = await api.post("/api/inventario", {
         idPrenda: Number(form.idPrenda),
         codigo_interno: form.codigo_interno.trim().toUpperCase(),
         estado: form.estado,
@@ -183,7 +183,11 @@ function InventoryAdmin() {
   const handleDelete = async (id) => {
     if (!confirm("¿Eliminar este item del inventario?")) return;
     try {
-      await api.delete(`/api/inventario/${id}`);
+      const res = await api.delete(`/api/inventario/${id}`);
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.message);
+      }
       setInventory((prev) => prev.filter((i) => i.idInventario !== id));
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error eliminando item.');
@@ -210,14 +214,18 @@ function InventoryAdmin() {
     reparacion: inventory.filter((i) => i.estado === "Reparacion").length,
   };
 
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const dashboardLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
+  const usersLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/admin/usuarios';
+
   return (
     <>
       <nav className="app-nav">
         <div className="nav-inner">
-          <Link to="/dashboardadmin" className="brand">RentStyle</Link>
+          <Link to={dashboardLink} className="brand">RentStyle</Link>
           <div className="nav-actions">
             <Link to="/admin/productos" className="nav-link">Productos</Link>
-            <Link to="/admin/usuarios" className="nav-link">Usuarios</Link>
+            <Link to={usersLink} className="nav-link">Usuarios</Link>
             <Link to="/admin/inventario" className="nav-link">Inventario</Link>
             <Link to="/admin/reservas" className="dashboard-button">Gestión de reservas</Link>
             <ThemeToggle />

@@ -31,7 +31,7 @@ function ProductsAdmin() {
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (!currentUser || currentUser.role !== "admin") {
+    if (!currentUser || !["admin", "empleado"].includes(currentUser.role)) {
       navigate("/login", { replace: true });
       return;
     }
@@ -312,14 +312,18 @@ function ProductsAdmin() {
 
   const logout = () => { localStorage.clear(); navigate("/login", { replace: true }); };
 
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const dashboardLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
+  const usersLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/admin/usuarios';
+
   return (
     <>
       <nav className="app-nav">
         <div className="nav-inner">
-          <Link to="/dashboardadmin" className="brand">RentStyle</Link>
+          <Link to={dashboardLink} className="brand">RentStyle</Link>
           <div className="nav-actions">
             <Link to="/admin/productos" className="nav-link">Productos</Link>
-            <Link to="/admin/usuarios" className="nav-link">Usuarios</Link>
+            <Link to={usersLink} className="nav-link">Usuarios</Link>
             <Link to="/admin/inventario" className="nav-link">Inventario</Link>
             <Link to="/admin/reservas" className="dashboard-button">Gestión de reservas</Link>
             
