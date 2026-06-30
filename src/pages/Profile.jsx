@@ -12,15 +12,16 @@ function Profile() {
 
   // 2. Cargar datos del usuario logueado en tiempo real
   const [currentUser, setCurrentUser] = useState(() => {
-    return JSON.parse(localStorage.getItem("currentUser")) || { nombre: "Alejandro", email: "alejo@mail.com", role: "user" };
+    const savedUser = JSON.parse(localStorage.getItem("currentUser"));
+    return savedUser || { nombre: "Alejandro", correo: "alejo@mail.com", email: "alejo@mail.com", telefono: "", avatar_url: "", role: "user" };
   });
 
   // 3. Estados de los campos del formulario
   const [nombre, setNombre] = useState(currentUser.nombre || "");
-  const [correo, setCorreo] = useState(currentUser.email || "");
-  const [avatar, setAvatar] = useState(() => {
-    return localStorage.getItem(`avatar_${currentUser.email}`) || "";
-  });
+  const [correo, setCorreo] = useState(currentUser.correo || currentUser.email || "");
+  const [telefono, setTelefono] = useState(currentUser.telefono || "");
+  const [avatarPreview, setAvatarPreview] = useState(currentUser.avatar_url || "");
+  const [avatarFile, setAvatarFile] = useState(null);
 
   // 4. Estados para la Notificación Apple
   const [toast, setToast] = useState({ show: false, message: "" });
@@ -38,36 +39,63 @@ function Profile() {
     toggleTheme();
   };
 
-  // Manejar la subida de foto y transformarla a Base64 para guardarla en LocalStorage
+  // Manejar la selección de avatar y mostrar una vista previa antes de subirlo.
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setAvatarFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatar(reader.result);
+        setAvatarPreview(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
   // Guardar los cambios actualizados
-  const handleGuardarCambios = (e) => {
+  const handleGuardarCambios = async (e) => {
     e.preventDefault();
 
-    // Actualizar objeto en sesión
-    const usuarioActualizado = { ...currentUser, nombre, email: correo };
-    localStorage.setItem("currentUser", JSON.stringify(usuarioActualizado));
-    
-    // Guardar imagen por separado amarrada al correo
-    if (avatar) {
-      localStorage.setItem(`avatar_${correo}`, avatar);
+    const formData = new FormData();
+    formData.append('nombre', nombre);
+    formData.append('correo', correo);
+    formData.append('telefono', telefono);
+    if (avatarFile) {
+      formData.append('avatar', avatarFile);
     }
 
-    // Lanzar notificación iOS exitosa
-    if (toastTimeoutId) clearTimeout(toastTimeoutId);
-    setToast({ show: true, message: "Perfil actualizado con éxito." });
-    const timeout = setTimeout(() => setToast({ show: false, message: "" }), 3000);
-    setToastTimeoutId(timeout);
+    try {
+      const userId = currentUser.idUsuario || currentUser.id;
+      const response = await fetch(`/api/usuarios/${userId}`, {
+        method: 'PUT',
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || 'Error al actualizar perfil');
+      }
+
+      const updatedUser = result.data;
+      const usuarioActualizado = {
+        ...currentUser,
+        nombre,
+        correo,
+        email: correo,
+        telefono,
+        avatar_url: updatedUser.avatar_url || currentUser.avatar_url,
+      };
+      setCurrentUser(usuarioActualizado);
+      localStorage.setItem('currentUser', JSON.stringify(usuarioActualizado));
+
+      if (toastTimeoutId) clearTimeout(toastTimeoutId);
+      setToast({ show: true, message: 'Perfil actualizado con éxito.' });
+      const timeout = setTimeout(() => setToast({ show: false, message: '' }), 3000);
+      setToastTimeoutId(timeout);
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'No se pudo actualizar el perfil.');
+    }
   };
 
   const logout = () => {
@@ -122,8 +150,8 @@ function Profile() {
             {/* Zona del Avatar estilizada */}
             <div className="avatar-wrapper">
               <div className="avatar-circle">
-                {avatar ? (
-                  <img src={avatar} alt="Avatar" className="avatar-img" />
+                {avatarPreview ? (
+                  <img src={avatarPreview} alt="Avatar" className="avatar-img" />
                 ) : (
                   <div className="avatar-placeholder">
                     {/* ICONO SVG DE PERSONITA EN GRIS DE TU EQUIPO */}
@@ -159,6 +187,11 @@ function Profile() {
             <div className="form-group">
               <label htmlFor="correo">Correo</label>
               <input type="email" id="correo" value={correo} onChange={(e) => setCorreo(e.target.value)} required />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="telefono">Teléfono</label>
+              <input type="tel" id="telefono" value={telefono} onChange={(e) => setTelefono(e.target.value.replace(/\D/g, ""))} placeholder="3001234567" />
             </div>
 
             <button type="submit" className="save-profile-btn">Guardar Cambios</button>

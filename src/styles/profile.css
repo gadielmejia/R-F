@@ -21,10 +21,13 @@
   z-index: 2000;
 }
 .login-nav-inner {
-  padding: 15px 40px;
+  padding: 15px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 18px;
+  max-width: 1240px;
+  margin: 0 auto;
 }
 .login-logo {
   font-family: 'Playfair Display', serif;
@@ -34,10 +37,12 @@
 .login-nav-links {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 14px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .login-nav-links a, .logout-btn-nav {
-  padding: 10px 22px;
+  padding: 10px 18px;
   border-radius: 999px;
   background: #f5faf4 !important;
   color: #212529 !important;
@@ -76,6 +81,32 @@ footer, .footer, .profile-page .footer {
   border-top: 1px solid #e9ecef !important;
   padding: 20px 40px !important;
   margin-top: auto;
+}
+
+/* DARK MODE OVERRIDES */
+body.dark .login-nav {
+  background: var(--surface) !important;
+  border-bottom-color: var(--border) !important;
+}
+body.dark .login-logo {
+  color: var(--text) !important;
+}
+body.dark .login-nav-links a,
+body.dark .logout-btn-nav {
+  background: rgba(255,255,255,0.04) !important;
+  color: var(--text) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.login-nav-links .theme-toggle-nav {
+  margin-right: 8px;
+}
+body.dark footer,
+body.dark .footer,
+body.dark .profile-page .footer {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  border-top-color: rgba(255,255,255,0.06) !important;
 }
 
 /* ===================================================

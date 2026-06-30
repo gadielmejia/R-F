@@ -7,14 +7,6 @@ const MAX_AVATAR_MB = 5;
 const MIN_NAME_LEN  = 3;
 const MIN_PW_LEN    = 8;
 
-async function hashPassword(pw) {
-  const data    = new TextEncoder().encode(pw);
-  const hashBuf = await crypto.subtle.digest('SHA-256', data);
-  return Array.from(new Uint8Array(hashBuf))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
 function measureStrength(pw) {
   let score = 0;
   if (pw.length >= 0)  score++;
@@ -71,15 +63,13 @@ const handleSubmit = async (e) => {
 
   setLoading(true);
   try {
-    const passwordHash = await hashPassword(formData.password);
-
     const res = await fetch('/api/usuarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         nombre:    formData.name.trim(),
         correo:    formData.email.trim().toLowerCase(),
-        Contrasena: passwordHash,
+        Contrasena: formData.password,
         documento:  formData.documento.trim(),
         telefono:   formData.telefono.trim() || null,
         idRol:      2,

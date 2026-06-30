@@ -4,11 +4,7 @@ import Footer from "../components/Footer";
 import { api } from "../utils/api";
 import { useTheme } from "../context/ThemeContext"; 
 import "../styles/dashboardUser.css";
-import vestidoverde from "../assets/vestidoverde.jpg";
-import vestidonegro from "../assets/vestidonregro.jpg";
-import vestidoazul from "../assets/vestidoazul.png";
-import vestidorojo from "../assets/vestidorojo.png";
-import vestidodorado from "../assets/vestidodorado.png";
+
 
 function DashboardUser() {
   const navigate = useNavigate();
@@ -29,6 +25,12 @@ function DashboardUser() {
   const [sortBy, setSortBy] = useState("nombre");
   const [loading, setLoading] = useState(false);
   const [showGreeting, setShowGreeting] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  // Modal para seleccionar talla y cantidad
+  const [modalProduct, setModalProduct] = useState(null);
+  const [selectedTalla, setSelectedTalla] = useState("");
+  const [selectedCantidad, setSelectedCantidad] = useState(1);
 
   // --- ESTADOS PARA LA NOTIFICACIÓN ESTILO APPLE ---
   const [toast, setToast] = useState({ show: false, message: "" });
@@ -81,25 +83,94 @@ function DashboardUser() {
     return product?.images?.[0]?.url || "";
   };
 
-  const addToCart = (product) => {
+  const getAvailabilityLabel = (product) => {
+    const count = product?.inventory?.length || 0;
+    if (count === 1) return "Prenda única";
+    if (count > 1) return `${count} unidades disponibles`;
+    return "Sin unidades";
+  };
+
+  const openProductModal = (product) => setSelectedProduct(product);
+  const closeProductModal = () => setSelectedProduct(null);
+
+  const openSizeModal = (product) => {
+    setModalProduct(product);
+    setSelectedTalla("");
+    setSelectedCantidad(1);
+  };
+
+  const closeSizeModal = () => {
+    setModalProduct(null);
+    setSelectedTalla("");
+    setSelectedCantidad(1);
+  };
+
+  const getTallasDisponibles = (product) => {
+    if (!product?.inventory) return [];
+    return [...new Set(product.inventory.map((inv) => inv.talla).filter(Boolean))];
+  };
+
+  const getTallasWithStatus = (product) => {
+    if (!product?.inventory) return [];
+    const tallas = [...new Set(product.inventory.map(inv => inv.talla).filter(Boolean))];
+    return tallas.map(talla => {
+      const invs = product.inventory.filter(inv => inv.talla === talla);
+      const unavailable = invs.some(i => i.estado !== 'Disponible');
+      // Priorizar 'Alquilado' > 'Reservado' cuando haya varios estados
+      let estado = 'Disponible';
+      if (invs.some(i => i.estado === 'Alquilado')) estado = 'Alquilado';
+      else if (invs.some(i => i.estado === 'Reservado')) estado = 'Reservado';
+      return { talla, available: !unavailable, estado };
+    });
+  };
+
+  const confirmarAgregarCarrito = () => {
+    if (!selectedTalla) {
+      alert("Por favor selecciona una talla.");
+      return;
+    }
+    if (selectedCantidad < 1) {
+      alert("La cantidad debe ser al menos 1.");
+      return;
+    }
+
+    // Encontrar un inventario disponible con esa talla
+    const inventarioDisponible = modalProduct.inventory?.find(
+      (inv) => inv.talla === selectedTalla && inv.estado === "Disponible"
+    );
+
+    if (!inventarioDisponible) {
+      alert(`No hay unidades disponibles en talla ${selectedTalla}.`);
+      return;
+    }
+
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     const item = {
-      id: product.idPrenda,
-      title: product.nombre_prenda,
-      price: Number(product.precio_alquiler),
-      image: getProductImage(product),
+      id: modalProduct.idPrenda,
+      idInventario: inventarioDisponible.idInventario,
+      title: modalProduct.nombre_prenda,
+      price: Number(modalProduct.precio_alquiler),
+      image: getProductImage(modalProduct),
+      talla: selectedTalla,
+      cantidad: selectedCantidad,
     };
 
     cart.push(item);
     localStorage.setItem("cart", JSON.stringify(cart));
-    
+
     if (toastTimeoutId) clearTimeout(toastTimeoutId);
 
-    setToast({ show: true, message: `"${item.title}" se agregó al carrito.` });
+    setToast({ show: true, message: `"${item.title}" (Talla ${selectedTalla}, Qty ${selectedCantidad}) se agregó al carrito.` });
     const newTimeout = setTimeout(() => {
       setToast({ show: false, message: "" });
     }, 3000);
     setToastTimeoutId(newTimeout);
+
+    closeSizeModal();
+  };
+
+  const addToCart = (product) => {
+    openSizeModal(product);
   };
 
   // Tallas y colores únicos para los filtros
@@ -272,39 +343,212 @@ function DashboardUser() {
                 }}>
                   {getCategoryName(p.idCategoria)}
                 </span>
-                <h3 style={{ margin: "0.5rem 0 0.25rem", fontSize: "1rem" }}>
-                  {p.nombre_prenda}
-                </h3>
-                {p.descripcion && (
-                  <p style={{ fontSize: "0.82rem", color: "#6b7280", marginBottom: "0.5rem" }}>
-                    {p.descripcion}
-                  </p>
-                )}
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
-                  {p.talla && (
-                    <span style={{ background: "#e5e7eb", borderRadius: "6px",
-                      padding: "2px 8px", fontSize: "0.78rem", fontWeight: 600 }}>
-                      Talla {p.talla}
-                    </span>
+                <div className="product-card-content">
+                  <h3 style={{ margin: "0.5rem 0 0.25rem", fontSize: "1rem" }}>
+                    {p.nombre_prenda}
+                  </h3>
+                  <div style={{ marginTop: '6px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {getTallasWithStatus(p).map(s => (
+                      <span
+                        key={s.talla}
+                        className={`size-pill ${s.available ? '' : 'unavailable'}`}
+                        style={{
+                          margin: '5px',
+                          padding: '5px 8px',
+                          borderRadius: 8,
+                          fontSize: '0.88rem',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          minWidth: 36,
+                          background: s.available ? undefined : '#fff1f2',
+                          color: s.available ? undefined : '#7f1d1d'
+                        }}
+                      >
+                        {s.talla}{!s.available ? ` • ${s.estado}` : ''}
+                      </span>
+                    ))}
+                  </div>
+                  {p.descripcion && (
+                    <p className="card-description">{p.descripcion}</p>
                   )}
-                  {p.color && (
-                    <span style={{ background: "#e5e7eb", borderRadius: "6px",
-                      padding: "2px 8px", fontSize: "0.78rem" }}>
-                      {p.color}
+                  <div className="product-meta-row">
+                    {p.talla && (
+                      <span className="meta-pill">Talla {p.talla}</span>
+                    )}
+                    {p.color && (
+                      <span className="meta-pill">{p.color}</span>
+                    )}
+                    <span className={`meta-pill ${p.inventory?.length === 1 ? 'unique' : ''}`}>
+                      {getAvailabilityLabel(p)}
                     </span>
-                  )}
+                  </div>
+                  <strong style={{ fontSize: "1.1rem", color: "#1B5E20", display: "block", marginBottom: "0.75rem" }}>
+                    ${Number(p.precio_alquiler).toLocaleString()}
+                  </strong>
+                  <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                    <button className="btn btn-secondary card-detail-btn" onClick={() => openProductModal(p)}>
+                      Ver más
+                    </button>
+                    <button className="btn btn-primary" onClick={() => addToCart(p)}>
+                      Agregar al carrito
+                    </button>
+                  </div>
                 </div>
-                <strong style={{ fontSize: "1.1rem", color: "#1B5E20", display: "block", marginBottom: "0.75rem" }}>
-                  ${Number(p.precio_alquiler).toLocaleString()}
-                </strong>
-                <button className="btn btn-primary" onClick={() => addToCart(p)}>
-                  Agregar al carrito
-                </button>
               </article>
             ))}
           </div>
         )}
       </section>
+
+      {selectedProduct && (
+        <div className="modal-overlay" onClick={closeProductModal}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={closeProductModal} aria-label="Cerrar detalle">×</button>
+            <div className="detail-grid">
+              <div className="detail-image">
+                {getProductImage(selectedProduct) ? (
+                  <img src={getProductImage(selectedProduct)} alt={selectedProduct.nombre_prenda} />
+                ) : (
+                  <div className="detail-image-empty">👗</div>
+                )}
+              </div>
+              <div className="detail-info">
+                <span className="category">
+                  {getCategoryName(selectedProduct.idCategoria)}
+                </span>
+                <h2>{selectedProduct.nombre_prenda}</h2>
+                <p className="detail-meta">
+                  {selectedProduct.talla ? `Talla ${selectedProduct.talla}` : ''}
+                  {selectedProduct.color ? ` · ${selectedProduct.color}` : ''}
+                </p>
+                <div style={{ marginTop: '8px' }}>
+                  {getTallasWithStatus(selectedProduct).map(s => (
+                    <span
+                      key={s.talla}
+                      className={`detail-size-pill ${s.available ? 'available' : 'unavailable'}`}
+                      style={{
+                        marginRight: '8px',
+                        marginBottom: '6px',
+                        padding: '5px 8px',
+                        borderRadius: 8,
+                        display: 'inline-flex'
+                      }}
+                    >
+                      {s.available ? `Talla ${s.talla}` : `Talla ${s.talla} (${s.estado})`}
+                    </span>
+                  ))}
+                </div>
+                <p className="detail-availability">{getAvailabilityLabel(selectedProduct)}</p>
+                <p className="detail-description">{selectedProduct.descripcion}</p>
+                <strong className="detail-price">
+                  ${Number(selectedProduct.precio_alquiler).toLocaleString()}
+                </strong>
+                <div className="detail-actions">
+                  <button className="btn btn-primary" onClick={() => { addToCart(selectedProduct); }}>
+                    Agregar al carrito
+                  </button>
+                  <button className="btn btn-secondary" onClick={closeProductModal}>
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de selección de talla y cantidad */}
+      {modalProduct && (
+        <div className="modal-overlay" onClick={closeSizeModal}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "400px" }}>
+            <button className="modal-close" onClick={closeSizeModal} aria-label="Cerrar">×</button>
+            <h2 style={{ marginBottom: "1.5rem", textAlign: "center" }}>Selecciona Talla y Cantidad</h2>
+            
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ fontWeight: "600", display: "block", marginBottom: "0.75rem" }}>
+                Talla:
+              </label>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(60px, 1fr))", gap: "0.5rem" }}>
+                {getTallasDisponibles(modalProduct).map((talla) => (
+                  <button
+                    key={talla}
+                    onClick={() => setSelectedTalla(talla)}
+                    style={{
+                      padding: "0.75rem",
+                      border: selectedTalla === talla ? "2px solid #1B5E20" : "1px solid #d1d5db",
+                      background: selectedTalla === talla ? "#E8F5E9" : "#fff",
+                      color: selectedTalla === talla ? "#1B5E20" : "#374151",
+                      borderRadius: "8px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    {talla}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ fontWeight: "600", display: "block", marginBottom: "0.75rem" }}>
+                Cantidad:
+              </label>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <button
+                  onClick={() => setSelectedCantidad(Math.max(1, selectedCantidad - 1))}
+                  style={{
+                    padding: "0.5rem 0.75rem",
+                    border: "1px solid #d1d5db",
+                    background: "#fff",
+                    borderRadius: "6px",
+                    cursor: "pointer"
+                  }}
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  value={selectedCantidad}
+                  onChange={(e) => setSelectedCantidad(Math.max(1, Number(e.target.value)))}
+                  style={{
+                    flex: 1,
+                    padding: "0.5rem 0.75rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "6px",
+                    textAlign: "center",
+                    fontSize: "1rem",
+                    fontWeight: "600"
+                  }}
+                  min="1"
+                />
+                <button
+                  onClick={() => setSelectedCantidad(selectedCantidad + 1)}
+                  style={{
+                    padding: "0.5rem 0.75rem",
+                    border: "1px solid #d1d5db",
+                    background: "#fff",
+                    borderRadius: "6px",
+                    cursor: "pointer"
+                  }}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "0.75rem" }}>
+              <button className="btn btn-primary" onClick={confirmarAgregarCarrito} style={{ flex: 1 }}>
+                Agregar al carrito
+              </button>
+              <button className="btn btn-secondary" onClick={closeSizeModal} style={{ flex: 1 }}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

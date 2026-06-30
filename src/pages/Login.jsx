@@ -27,16 +27,10 @@ function Login() {
 const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-        const encoded = new TextEncoder().encode(password);
-        const hashBuf = await crypto.subtle.digest('SHA-256', encoded);
-        const passwordHash = Array.from(new Uint8Array(hashBuf))
-            .map(b => b.toString(16).padStart(2, '0'))
-            .join('');
-
         const res = await fetch('/api/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ correo: email, Contrasena: passwordHash }),
+            body: JSON.stringify({ correo: email, Contrasena: password }),
         });
         const json = await res.json();
         if (!res.ok) {

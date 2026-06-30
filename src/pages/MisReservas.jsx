@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
 import Footer from "../components/Footer";
+import ThemeToggle from "../components/ThemeToggle";
 
 const ESTADO_COLORS = {
   Pendiente: { bg: "#FFF3E0", color: "#E65100" },
@@ -71,6 +72,7 @@ function MisReservas() {
             <Link to="/cart">Carrito</Link>
             <Link to="/agendar-cita">Agendar cita</Link>
             <Link to="/profile">Perfil</Link>
+            <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
         </div>

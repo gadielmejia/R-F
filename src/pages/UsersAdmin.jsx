@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import ThemeToggle from "../components/ThemeToggle";
 import "../styles/Dashboardad.css";
 
 const emptyForm = (roleId = "") => ({
@@ -45,7 +46,6 @@ function UsersAdmin() {
         if (rolesResponse.ok) {
           const roleList = rolesData.data || [];
           setRoles(roleList);
-          setUserForm((prev) => ({ ...prev, idRol: prev.idRol || String(roleList[0]?.idRol || "") }));
         }
 
         if (usersResponse.ok) {
@@ -64,8 +64,8 @@ function UsersAdmin() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
-    if (!userForm.nombre.trim() || !userForm.correo.trim() || !userForm.Contrasena) {
-      setFormError("Completa nombre, correo y contraseña.");
+    if (!userForm.nombre.trim() || !userForm.correo.trim() || !userForm.Contrasena || !userForm.idRol) {
+      setFormError("Completa nombre, correo, contraseña y selecciona un rol.");
       return;
     }
 
@@ -77,7 +77,7 @@ function UsersAdmin() {
         correo: userForm.correo.trim().toLowerCase(),
         Contrasena: userForm.Contrasena,
         telefono: userForm.telefono.trim(),
-        idRol: userForm.idRol ? Number(userForm.idRol) : undefined,
+        idRol: Number(userForm.idRol),
       };
 
       if (userForm.documento.trim()) {
@@ -96,7 +96,7 @@ function UsersAdmin() {
       }
 
       setUsers((prev) => [data.data, ...prev]);
-      setUserForm(emptyForm(roles[0]?.idRol?.toString() || ""));
+      setUserForm(emptyForm());
     } catch (error) {
       setFormError(error.message);
     } finally {
@@ -202,15 +202,11 @@ function UsersAdmin() {
             RentStyle
           </Link>
           <div className="nav-actions">
-            <Link to="/admin/productos" className="nav-link">
-              Gestión de productos
-            </Link>
-            <Link to="/admin/usuarios" className="nav-link">
-              Gestión de usuarios
-            </Link>
-            <Link to="/admin/inventario" className="nav-link">
-              Inventario
-            </Link>
+            <Link to="/admin/productos" className="nav-link">Productos</Link>
+            <Link to="/admin/usuarios" className="nav-link">Usuarios</Link>
+            <Link to="/admin/inventario" className="nav-link">Inventario</Link>
+            <Link to="/admin/reservas" className="dashboard-button">Gestión de reservas</Link>
+            <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
         </div>
@@ -224,36 +220,50 @@ function UsersAdmin() {
 
         <div className="dashboard-card">
           <h2>Agregar Usuario</h2>
-          <form className="form-container" onSubmit={handleCreateUser}>
+          <form className="form-container" autoComplete="off" onSubmit={handleCreateUser}>
+            <input type="text" name="prevent_autofill_username" autoComplete="off" style={{ opacity: 0, height: 0, position: 'absolute', pointerEvents: 'none' }} />
+            <input type="password" name="prevent_autofill_password" autoComplete="new-password" style={{ opacity: 0, height: 0, position: 'absolute', pointerEvents: 'none' }} />
             {formError && <p className="field-alert">⚠ {formError}</p>}
             <input
+              name="nombre"
               type="text"
+              autoComplete="name"
               placeholder="Nombre"
               value={userForm.nombre}
               onChange={(e) => setUserForm({ ...userForm, nombre: e.target.value })}
               required
             />
             <input
+              name="documento"
               type="text"
-              placeholder="Documento (opcional)"
+              autoComplete="off"
+              placeholder="Documento"
               value={userForm.documento}
               onChange={(e) => setUserForm({ ...userForm, documento: e.target.value })}
             />
             <input
+              name="correo"
               type="email"
+              autoComplete="email"
               placeholder="Correo"
               value={userForm.correo}
               onChange={(e) => setUserForm({ ...userForm, correo: e.target.value })}
               required
             />
             <input
-              type="text"
+              name="telefono"
+              type="tel"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              autoComplete="tel"
               placeholder="Teléfono (opcional)"
               value={userForm.telefono}
-              onChange={(e) => setUserForm({ ...userForm, telefono: e.target.value })}
+              onChange={(e) => setUserForm({ ...userForm, telefono: e.target.value.replace(/\D/g, '') })}
             />
             <input
+              name="Contrasena"
               type="password"
+              autoComplete="new-password"
               placeholder="Contraseña"
               value={userForm.Contrasena}
               onChange={(e) => setUserForm({ ...userForm, Contrasena: e.target.value })}
@@ -263,7 +273,11 @@ function UsersAdmin() {
               value={userForm.idRol}
               onChange={(e) => setUserForm({ ...userForm, idRol: e.target.value })}
               className="role-select"
+              required
             >
+              <option value="" disabled>
+                Selecciona un rol
+              </option>
               {roles.map((role) => (
                 <option key={role.idRol} value={role.idRol}>
                   {role.nombre}
@@ -342,36 +356,50 @@ function UsersAdmin() {
           <div className="modal-overlay">
             <div className="modal-card">
               <h2>Editar Usuario</h2>
-              <form className="form-container" onSubmit={handleUpdateUser}>
+              <form className="form-container" autoComplete="off" onSubmit={handleUpdateUser}>
+                <input type="text" name="prevent_autofill_username" autoComplete="off" style={{ opacity: 0, height: 0, position: 'absolute', pointerEvents: 'none' }} />
+                <input type="password" name="prevent_autofill_password" autoComplete="new-password" style={{ opacity: 0, height: 0, position: 'absolute', pointerEvents: 'none' }} />
                 {formError && <p className="field-alert">⚠ {formError}</p>}
                 <input
+                  name="nombre"
                   type="text"
+                  autoComplete="name"
                   placeholder="Nombre"
                   value={editingUser.nombre || ""}
                   onChange={(e) => setEditingUser({ ...editingUser, nombre: e.target.value })}
                   required
                 />
                 <input
+                  name="documento"
                   type="text"
+                  autoComplete="off"
                   placeholder="Documento (opcional)"
                   value={editingUser.documento || ""}
                   disabled
                 />
                 <input
+                  name="correo"
                   type="email"
+                  autoComplete="email"
                   placeholder="Correo"
                   value={editingUser.correo || ""}
                   onChange={(e) => setEditingUser({ ...editingUser, correo: e.target.value })}
                   required
                 />
                 <input
-                  type="text"
+                  name="telefono"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="tel"
                   placeholder="Teléfono (opcional)"
                   value={editingUser.telefono || ""}
-                  onChange={(e) => setEditingUser({ ...editingUser, telefono: e.target.value })}
+                  onChange={(e) => setEditingUser({ ...editingUser, telefono: e.target.value.replace(/\D/g, '') })}
                 />
                 <input
+                  name="Contrasena"
                   type="password"
+                  autoComplete="new-password"
                   placeholder="Nueva contraseña (dejar vacío para no cambiar)"
                   value={editingUser.Contrasena || ""}
                   onChange={(e) => setEditingUser({ ...editingUser, Contrasena: e.target.value })}

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
 import Footer from "../components/Footer";
+import ThemeToggle from "../components/ThemeToggle";
 import "../styles/Dashboardad.css";
 
 const ESTADOS = ["Pendiente", "Confirmada", "Entregada", "Finalizada", "Cancelada"];
@@ -32,16 +33,16 @@ function ReservasAdmin() {
 
   const loadData = async () => {
     setLoading(true);
+    setError("");
     try {
       const [resRes, citasRes] = await Promise.all([
-        api.get("/reservas"),
-        api.get("/citas"),
+        api.get("/api/reservas"),
+        api.get("/api/citas"),
       ]);
-      const resData = await resRes.json();
-      const citasData = await citasRes.json();
-      setReservas(resData.data || []);
-      setCitas(citasData.data || []);
-    } catch {
+      setReservas(resRes.data?.data || []);
+      setCitas(citasRes.data?.data || []);
+    } catch (err) {
+      console.error(err);
       setError("Error cargando datos.");
     } finally {
       setLoading(false);
@@ -52,30 +53,30 @@ function ReservasAdmin() {
     e.preventDefault();
     setError("");
     try {
-      const res = await api.put(`/reservas/${editingReserva.idReserva}`, {
+      const response = await api.put(`/api/reservas/${editingReserva.idReserva}`, {
         estado: editingReserva.estado,
         observaciones: editingReserva.observaciones,
         fecha_devolucion: editingReserva.fecha_devolucion || null,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const updatedReserva = response.data?.data;
       setReservas(prev => prev.map(r =>
-        r.idReserva === editingReserva.idReserva ? data.data : r
+        r.idReserva === editingReserva.idReserva ? updatedReserva : r
       ));
       setEditingReserva(null);
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError(err.response?.data?.message || "Error actualizando reserva.");
     }
   };
 
   const handleUpdateCita = async (idCita, nuevoEstado) => {
     try {
-      const res = await api.put(`/citas/${idCita}`, { estado: nuevoEstado });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-      setCitas(prev => prev.map(c => c.idCita === idCita ? data.data : c));
+      const response = await api.put(`/api/citas/${idCita}`, { estado: nuevoEstado });
+      const updatedCita = response.data?.data;
+      setCitas(prev => prev.map(c => c.idCita === idCita ? updatedCita : c));
     } catch (err) {
-      setError(err.message);
+      console.error(err);
+      setError(err.response?.data?.message || "Error actualizando cita.");
     }
   };
 
@@ -105,7 +106,8 @@ function ReservasAdmin() {
             <Link to="/admin/productos" className="nav-link">Productos</Link>
             <Link to="/admin/usuarios" className="nav-link">Usuarios</Link>
             <Link to="/admin/inventario" className="nav-link">Inventario</Link>
-            <Link to="/admin/reservas" className="nav-link">Reservas</Link>
+            <Link to="/admin/reservas" className="dashboard-button">Gestión de reservas</Link>
+            <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
         </div>
