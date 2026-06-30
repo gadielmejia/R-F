@@ -1,18 +1,23 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import ThemeToggle from "../components/ThemeToggle";
 import { api } from "../utils/api";
+import { useTheme } from "../context/ThemeContext";
 import "../styles/Dashboardad.css";
 
 const ESTADOS = ["Disponible", "Reservado", "Alquilado", "Reparacion"];
 
 const emptyForm = { idPrenda: "", codigo_interno: "", estado: "Disponible" };
+const emptyLotForm = { idPrenda: "", nombre_lote: "", descripcion_lote: "", codigoInput: "", items: [] };
 
 function InventoryAdmin() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [inventory, setInventory] = useState([]);
   const [prendas, setPrendas] = useState([]);
   const [form, setForm] = useState(emptyForm);
+  const [lotForm, setLotForm] = useState(emptyLotForm);
   const [editingItem, setEditingItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,12 +39,14 @@ function InventoryAdmin() {
         api.get("/api/inventario"),
         api.get("/api/prendas"),
       ]);
-      const invData = await invRes.json();
-      const prendasData = await prendasRes.json();
+      const invData = invRes.data;
+      const prendasData = prendasRes.data;
       setInventory(invData.data || []);
       setPrendas(prendasData.data || []);
       if (prendasData.data?.length > 0) {
-        setForm((f) => ({ ...f, idPrenda: String(prendasData.data[0].idPrenda) }));
+        const firstId = String(prendasData.data[0].idPrenda);
+        setForm((f) => ({ ...f, idPrenda: firstId }));
+        setLotForm((f) => ({ ...f, idPrenda: firstId }));
       }
     } catch (err) {
       setError("Error cargando inventario.");
@@ -88,12 +95,66 @@ function InventoryAdmin() {
         codigo_interno: form.codigo_interno.trim().toUpperCase(),
         estado: form.estado,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const data = res.data;
       setInventory((prev) => [data.data, ...prev]);
       setForm({ ...emptyForm, idPrenda: String(prendas[0]?.idPrenda || "") });
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Error creando inventario.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addLotItem = () => {
+    const code = lotForm.codigoInput.trim().toUpperCase();
+    if (!code) {
+      setError("El código del lote es obligatorio.");
+      return;
+    }
+    setLotForm((prev) => ({
+      ...prev,
+      items: [...prev.items, { codigo_interno: code }],
+      codigoInput: "",
+    }));
+    setError("");
+  };
+
+  const removeLotItem = (code) => {
+    setLotForm((prev) => ({
+      ...prev,
+      items: prev.items.filter((item) => item.codigo_interno !== code),
+    }));
+  };
+
+  const handleCreateLote = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!lotForm.nombre_lote.trim()) {
+      setError("El nombre del lote es obligatorio.");
+      return;
+    }
+    if (lotForm.items.length === 0) {
+      setError("Agrega al menos un código para crear el lote.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await api.post('/api/inventario', {
+        idPrenda: Number(lotForm.idPrenda),
+        lote_data: {
+          nombre_lote: lotForm.nombre_lote.trim(),
+          descripcion_lote: lotForm.descripcion_lote.trim(),
+          cantidad_prendas: lotForm.items.length,
+          detalles_prenda: lotForm.items,
+        },
+      });
+      const data = res.data;
+      const createdItems = data.data?.inventory || [];
+      setInventory((prev) => [...createdItems, ...prev]);
+      setLotForm({ ...emptyLotForm, idPrenda: String(prendas[0]?.idPrenda || "") });
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Error creando lote.');
     } finally {
       setLoading(false);
     }
@@ -107,14 +168,13 @@ function InventoryAdmin() {
       const res = await api.put(`/api/inventario/${editingItem.idInventario}`, {
         estado: editingItem.estado,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const data = res.data;
       setInventory((prev) =>
         prev.map((i) => (i.idInventario === editingItem.idInventario ? data.data : i))
       );
       setEditingItem(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Error actualizando estado.');
     } finally {
       setLoading(false);
     }
@@ -130,7 +190,7 @@ function InventoryAdmin() {
       }
       setInventory((prev) => prev.filter((i) => i.idInventario !== id));
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || 'Error eliminando item.');
     }
   };
 
@@ -167,12 +227,14 @@ function InventoryAdmin() {
             <Link to="/admin/productos" className="nav-link">Productos</Link>
             <Link to={usersLink} className="nav-link">Usuarios</Link>
             <Link to="/admin/inventario" className="nav-link">Inventario</Link>
+            <Link to="/admin/reservas" className="dashboard-button">Gestión de reservas</Link>
+            <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
         </div>
       </nav>
 
-      <div className="dashboard-container">
+      <div className={`dashboard-container ${theme === "dark" ? "dark" : ""}`}>
         <div className="dashboard-header">
           <h1>Inventario</h1>
           <p>Gestiona el estado de cada unidad de prenda en el sistema.</p>
@@ -191,35 +253,55 @@ function InventoryAdmin() {
         {/* Formulario agregar */}
         <div className="dashboard-card">
           <h2>Agregar unidad al inventario</h2>
-          <form className="form-container" onSubmit={handleCreate}>
-            <select
-              value={form.idPrenda}
-              onChange={(e) => setForm({ ...form, idPrenda: e.target.value })}
-              className="role-select"
-              required
-            >
-              {prendas.map((p) => (
-                <option key={p.idPrenda} value={p.idPrenda}>
-                  {p.nombre_prenda} — Talla {p.talla || "U"}
-                </option>
-              ))}
-            </select>
+          <div className="form-container" style={{ justifyContent: 'center' }}>
+            <Link to="/admin/productos" className="btn btn-primary" style={{ width: '100%', textAlign: 'center' }}>
+              Ir a productos para agregar
+            </Link>
+          </div>
+        </div>
+
+        {/* Formulario crear lote */}
+        <div className="dashboard-card">
+          <h2>Crear lote</h2>
+          <form className="form-container" onSubmit={handleCreateLote}>
             <input
               type="text"
-              placeholder="Código interno (ej: INV-008)"
-              value={form.codigo_interno}
-              onChange={(e) => setForm({ ...form, codigo_interno: e.target.value })}
+              placeholder="Nombre del lote"
+              value={lotForm.nombre_lote}
+              onChange={(e) => setLotForm({ ...lotForm, nombre_lote: e.target.value })}
               required
             />
-            <select
-              value={form.estado}
-              onChange={(e) => setForm({ ...form, estado: e.target.value })}
-              className="role-select"
-            >
-              {ESTADOS.map((s) => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <textarea
+              rows={3}
+              placeholder="Descripción del lote"
+              value={lotForm.descripcion_lote}
+              onChange={(e) => setLotForm({ ...lotForm, descripcion_lote: e.target.value })}
+              style={{ resize: "vertical" }}
+            />
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <input
+                type="text"
+                placeholder="Código del lote"
+                value={lotForm.codigoInput}
+                onChange={(e) => setLotForm({ ...lotForm, codigoInput: e.target.value })}
+                style={{ flex: 1, minWidth: 180 }}
+              />
+              <button type="button" className="btn btn-secondary" onClick={addLotItem}>
+                Agregar código
+              </button>
+            </div>
+            {lotForm.items.length > 0 && (
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
+                {lotForm.items.map((item) => (
+                  <div key={item.codigo_interno} className="batch-item-chip">
+                    <span>{item.codigo_interno}{item.talla ? ` — ${item.talla}` : ""}</span>
+                    <button type="button" onClick={() => removeLotItem(item.codigo_interno)}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
             <button className="btn btn-primary" type="submit" disabled={loading}>
-              {loading ? "Guardando..." : "Agregar al inventario"}
+              {loading ? "Guardando..." : "Crear lote"}
             </button>
           </form>
         </div>
@@ -239,9 +321,11 @@ function InventoryAdmin() {
             <thead>
               <tr>
                 <th>Código</th>
+                <th>Talla</th>
                 <th>Prenda</th>
                 <th>Estado</th>
                 <th>Acciones</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -252,13 +336,11 @@ function InventoryAdmin() {
               ) : filtered.map((item) => (
                 <tr key={item.idInventario}>
                   <td><code>{item.codigo_interno}</code></td>
+                  <td>{item.talla || "No especificada"}</td>
                   <td>{getPrendaNombre(item.idPrenda)}</td>
-                  <td>{getEstadoBadge(item.estado)}</td>
+                  <td>{getEstadoBadge(item.estado)}</td>                  
                   <td style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      className="btn btn-secondary"
-                      onClick={() => setEditingItem({ ...item })}
-                    >
+                    <button className="btn btn-secondary" onClick={() => setEditingItem({ ...item })}>
                       Cambiar estado
                     </button>
                     <button
@@ -268,6 +350,7 @@ function InventoryAdmin() {
                       Eliminar
                     </button>
                   </td>
+                  
                 </tr>
               ))}
             </tbody>

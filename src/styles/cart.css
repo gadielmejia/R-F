@@ -71,12 +71,48 @@
   background: linear-gradient(to right, #2d6a4f 50%, transparent 50%) !important;
 }
 
+.cart-page.dark .login-nav {
+  background: #142816 !important;
+  border-bottom-color: rgba(255,255,255,0.12) !important;
+}
+.cart-page.dark .login-logo {
+  color: #f7f9f5 !important;
+}
+.cart-page.dark .login-nav-links a,
+.cart-page.dark .logout-btn-nav {
+  background: rgba(255,255,255,0.05) !important;
+  color: #e5f7e0 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+.cart-page.dark .login-nav-links a:hover,
+.cart-page.dark .logout-btn-nav:hover,
+.cart-page.dark .active-link {
+  background: #2d8a43 !important;
+  color: white !important;
+}
+.cart-page.dark .theme-toggle-nav {
+  background: rgba(255,255,255,0.08) !important;
+  border-color: rgba(255,255,255,0.16) !important;
+}
+.cart-page.dark .theme-icon-nav {
+  border-color: #8dbfa1 !important;
+  background: linear-gradient(to right, #2d8a43 50%, transparent 50%) !important;
+}
+
 footer, .footer, .cart-page .footer {
   background-color: #ffffff !important;
   color: #212529 !important;
   border-top: 1px solid #e9ecef !important;
   padding: 20px 40px !important;
   margin-top: auto;
+}
+
+.cart-page.dark footer,
+.cart-page.dark .footer,
+.cart-page.dark .cart-page .footer {
+  background-color: #102012 !important;
+  color: #d7e8cf !important;
+  border-top-color: rgba(255,255,255,0.08) !important;
 }
 
 /* ===================================================
@@ -266,41 +302,71 @@ footer, .footer, .cart-page .footer {
   MODO OSCURO COHESIVO
    =================================================== */
 .cart-page.dark {
-  background: #102012;
+  background: #0f1a11;
+  color: #e5f7e0;
 }
 .cart-page.dark .cart-header h2 {
-  color: white;
+  color: #a8e6b8;
 }
-.cart-page.dark .cart-header p,
-.cart-page.dark .empty-cart-card p,
-.cart-page.dark .summary-row {
-  color: #c7d6c9;
+.cart-page.dark .cart-header p {
+  color: #8db89f;
 }
-.cart-page.dark .empty-cart-card,
-.cart-page.dark .cart-item-row,
-.cart-page.dark .cart-summary-card {
-  background: #1b2b1d;
-  border-color: #355339;
+.cart-page.dark .empty-cart-card {
+  background: #1a2b1e;
+  border-color: #2d5a3d;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
-.cart-page.dark .empty-cart-card h3,
-.cart-page.dark .cart-item-details h4,
-.cart-page.dark .total-row,
-.cart-page.dark .cart-summary-card h3 {
-  color: white;
+.cart-page.dark .empty-cart-card h3 {
+  color: #e5f7e0;
 }
-.cart-page.dark .cart-item-price,
-.cart-page.dark .total-row strong {
+.cart-page.dark .empty-cart-card p {
+  color: #a8d9b5;
+}
+.cart-page.dark .cart-item-row {
+  background: #1a2b1e;
+  border-color: #2d5a3d;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+.cart-page.dark .cart-item-details h4 {
+  color: #e5f7e0;
+}
+.cart-page.dark .cart-item-price {
   color: #66d17d;
 }
+.cart-page.dark .remove-item-btn {
+  color: #ff6b6b;
+}
 .cart-page.dark .remove-item-btn:hover {
-  background: rgba(220, 53, 69, 0.1);
+  background: rgba(255, 107, 107, 0.15);
+}
+.cart-page.dark .cart-summary-card {
+  background: #1a2b1e;
+  border-color: #2d5a3d;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+.cart-page.dark .cart-summary-card h3 {
+  color: #a8e6b8;
+}
+.cart-page.dark .summary-row {
+  color: #a8d9b5;
 }
 .cart-page.dark .summary-divider {
-  border-top-color: #355339;
+  border-top-color: #2d5a3d;
+}
+.cart-page.dark .total-row {
+  color: #a8d9b5;
+}
+.cart-page.dark .total-row strong {
+  color: #66d17d;
+  font-size: 20px;
+}
+.cart-page.dark .free-badge {
+  color: #66d17d;
 }
 .cart-page.dark .back-catalog-btn,
 .cart-page.dark .checkout-btn {
   background: #2d8a43;
+  color: white;
 }
 .cart-page.dark .back-catalog-btn:hover,
 .cart-page.dark .checkout-btn:hover {

@@ -24,8 +24,16 @@ body{
 }
 
 body.dark{
-  background:#102012;
-  color:white;
+  --bg:#102012;
+  --surface:#17271a;
+  --border:rgba(255,255,255,0.12);
+  --primary:#8dbfa1;
+  --primary-dark:#dbe9d7;
+  --text:#f7f9f5;
+  --text-muted:#b9c3af;
+
+  background:var(--bg);
+  color:var(--text);
 }
 
 a{
@@ -38,7 +46,7 @@ img{
 }
 
 .app-nav{
-  background:white;
+  background:var(--surface);
   border-bottom:1px solid var(--border);
   position:sticky;
   top:0;
@@ -57,22 +65,121 @@ img{
   color:var(--primary-dark);
 }
 
+body.dark .brand{
+  color:var(--text);
+}
+
+.header .logo h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
 .nav-actions{
   display:flex;
   gap:10px;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .nav-actions a,
-.nav-actions button{
-  padding:10px 20px;
-  border:none;
-  border-radius:999px;
-  background:#f5faf4;
-  cursor:pointer;
+.nav-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(255,255,255,0.9);
+  color: var(--primary-dark);
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
 }
 
-.hero{
-  padding:60px 40px;
+.nav-actions a:hover,
+.nav-actions button:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.nav-actions button {
+  border: 1px solid rgba(0,0,0,0.05);
+}
+
+@media(max-width: 900px) {
+  .nav-inner {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .brand {
+    width: 100%;
+    text-align: center;
+    font-size: 22px;
+  }
+
+  .nav-actions {
+    justify-content: center;
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .nav-actions a,
+  .nav-actions button {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+}
+
+.theme-toggle-nav {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+body.dark .theme-toggle-nav {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.theme-toggle-nav:hover {
+  transform: scale(1.05);
+}
+
+.theme-toggle-nav svg {
+  width: 20px;
+  height: 20px;
+  color: var(--primary-dark);
+}
+
+body.dark .theme-toggle-nav svg {
+  color: var(--text);
+}
+
+/* Ajustes generales modo oscuro para nav y acciones */
+body.dark .nav-actions a,
+body.dark .nav-actions button {
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+body.dark .nav-actions a:hover,
+body.dark .nav-actions button:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
 }
 
 .hero-card{
@@ -142,6 +249,68 @@ img{
   text-align:center;
   padding:40px;
   margin-top:60px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Global override for footer in dark mode (high specificity) */
+body.dark footer,
+body.dark .footer {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+  border-top-color: rgba(255,255,255,0.06) !important;
+}
+
+/* Global navbar overrides for dark mode to beat !important rules in page CSS */
+body.dark .login-nav,
+body.dark .app-nav {
+  background: var(--surface) !important;
+  border-bottom-color: var(--border) !important;
+}
+body.dark .login-logo,
+body.dark .brand {
+  color: var(--text) !important;
+}
+body.dark .login-nav-links a,
+body.dark .nav-actions a,
+body.dark .nav-actions button {
+  background: rgba(255,255,255,0.04) !important;
+  color: var(--text) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* GENERAL OVERRIDE: tarjetas y filas que estén en blanco en varias hojas */
+body.dark .card,
+body.dark .product-card,
+body.dark .dashboard-card,
+body.dark .stat-card,
+body.dark .profile-card,
+body.dark .citas-card,
+body.dark .form-container,
+body.dark .empty-cart-card,
+body.dark .cart-item-row,
+body.dark .cart-summary-card,
+body.dark .batch-item-chip,
+body.dark .data-table,
+body.dark table,
+body.dark table tbody tr,
+body.dark .table-row,
+body.dark .list-row {
+  background: rgba(255,255,255,0.03) !important;
+  color: var(--text) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* Make sure highlighted/selected rows are readable in dark mode */
+body.dark table tbody tr:hover,
+body.dark .table-row:hover,
+body.dark .list-row:hover {
+  background: rgba(255,255,255,0.05) !important;
+}
+
+body.dark .footer {
+  background: #142816;
+  color: var(--text);
 }
 
 .product-card button {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
+import ThemeToggle from "../components/ThemeToggle";
 import { api } from "../utils/api";
 import "../styles/Dashboardad.css";
 
@@ -54,6 +55,7 @@ function DashboardAdmin() {
         <div className="nav-inner">
           <Link to="/dashboardadmin" className="brand">RentStyle</Link>
           <div className="nav-actions">
+            <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
         </div>

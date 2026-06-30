@@ -77,6 +77,23 @@ footer, .footer, .citas-page .footer {
     margin-top: auto;
 }
 
+/* DARK MODE OVERRIDES */
+body.dark .login-nav {
+    background: var(--surface) !important;
+    border-bottom-color: var(--border) !important;
+}
+body.dark .login-logo { color: var(--text) !important; }
+body.dark .login-nav-links a, body.dark .logout-btn-nav {
+    background: rgba(255,255,255,0.04) !important;
+    color: var(--text) !important;
+    border-color: rgba(255,255,255,0.06) !important;
+}
+body.dark footer, body.dark .footer, body.dark .citas-page .footer {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    border-top-color: rgba(255,255,255,0.06) !important;
+}
+
 /* ===================================================
     DISTRIBUCIÓN DEL CONTENIDO (SPLIT LAYOUT)
    =================================================== */

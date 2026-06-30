@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../utils/api";
 import Footer from "../components/Footer";
+import ThemeToggle from "../components/ThemeToggle";
 
 function AgendarCita() {
   const navigate = useNavigate();
@@ -105,6 +106,7 @@ function AgendarCita() {
             <Link to="/dashboarduser">Catálogo</Link>
             <Link to="/mis-reservas">Mis reservas</Link>
             <Link to="/profile">Perfil</Link>
+            <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
         </div>
