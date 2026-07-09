@@ -22,6 +22,9 @@ function InventoryAdmin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [stats, setStats] = useState({ total: 0, disponible: 0, reservado: 0, alquilado: 0, reparacion: 0 });
+  const [selectedEstado, setSelectedEstado] = useState(null);
+  const [stateItems, setStateItems] = useState([]);
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -30,7 +33,24 @@ function InventoryAdmin() {
       return;
     }
     loadData();
+    loadSummary();
   }, [navigate]);
+
+  const loadSummary = async () => {
+    try {
+      const res = await api.get('/api/inventario/summary');
+      const data = res.data?.data || {};
+      setStats({
+        total: data.total || 0,
+        disponible: data.by_estado?.Disponible || 0,
+        reservado: data.by_estado?.Reservado || 0,
+        alquilado: data.by_estado?.Alquilado || 0,
+        reparacion: data.by_estado?.Reparacion || 0,
+      });
+    } catch (err) {
+      // ignore
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -206,15 +226,31 @@ function InventoryAdmin() {
     return nombre.includes(q) || codigo.includes(q);
   });
 
-  const stats = {
-    total: inventory.length,
-    disponible: inventory.filter((i) => i.estado === "Disponible").length,
-    reservado: inventory.filter((i) => i.estado === "Reservado").length,
-    alquilado: inventory.filter((i) => i.estado === "Alquilado").length,
-    reparacion: inventory.filter((i) => i.estado === "Reparacion").length,
-  };
+  const statsToShow = stats;
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+
+  const displayedItems = selectedEstado ? stateItems.filter((item) => {
+    const q = search.toLowerCase();
+    const nombre = (item.prenda?.nombre_prenda || '').toLowerCase();
+    const codigo = (item.codigo_interno || '').toLowerCase();
+    return nombre.includes(q) || codigo.includes(q);
+  }) : filtered;
+
+  async function handleStatClick(estado) {
+    setSelectedEstado(estado);
+    setLoading(true);
+    setError('');
+    try {
+      const res = await api.get(`/api/inventario/estado/${encodeURIComponent(estado)}`);
+      const data = res.data?.data || [];
+      setStateItems(data);
+    } catch (err) {
+      setError('Error cargando items por estado.');
+    } finally {
+      setLoading(false);
+    }
+  }
   const dashboardLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
   const usersLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/admin/usuarios';
 
@@ -244,10 +280,26 @@ function InventoryAdmin() {
 
         {/* Stats */}
         <div className="stats-grid">
-          <div className="stat-card"><h3>Total unidades</h3><p>{stats.total}</p></div>
-          <div className="stat-card"><h3>Disponibles</h3><p style={{ color: "#1B5E20" }}>{stats.disponible}</p></div>
-          <div className="stat-card"><h3>Reservadas</h3><p style={{ color: "#E65100" }}>{stats.reservado}</p></div>
-          <div className="stat-card"><h3>Alquiladas</h3><p style={{ color: "#1565C0" }}>{stats.alquilado}</p></div>
+          <div className={`stat-card ${selectedEstado === null ? 'active' : ''}`} onClick={async () => { setSelectedEstado(null); setStateItems([]); await loadData(); await loadSummary(); }} style={{ cursor: 'pointer' }}>
+            <h3>Total unidades</h3>
+            <p>{stats.total}</p>
+          </div>
+          <div className={`stat-card ${selectedEstado === 'Disponible' ? 'active' : ''}`} onClick={() => handleStatClick('Disponible')} style={{ cursor: 'pointer' }}>
+            <h3>Disponibles</h3>
+            <p style={{ color: "#1B5E20" }}>{stats.disponible}</p>
+          </div>
+          <div className={`stat-card ${selectedEstado === 'Reservado' ? 'active' : ''}`} onClick={() => handleStatClick('Reservado')} style={{ cursor: 'pointer' }}>
+            <h3>Reservadas</h3>
+            <p style={{ color: "#E65100" }}>{stats.reservado}</p>
+          </div>
+          <div className={`stat-card ${selectedEstado === 'Alquilado' ? 'active' : ''}`} onClick={() => handleStatClick('Alquilado')} style={{ cursor: 'pointer' }}>
+            <h3>Alquiladas</h3>
+            <p style={{ color: "#1565C0" }}>{stats.alquilado}</p>
+          </div>
+          <div className={`stat-card ${selectedEstado === 'Reparacion' ? 'active' : ''}`} onClick={() => handleStatClick('Reparacion')} style={{ cursor: 'pointer' }}>
+            <h3>Reparación</h3>
+            <p style={{ color: "#B71C1C" }}>{stats.reparacion}</p>
+          </div>
         </div>
 
         {/* Formulario agregar */}
@@ -329,16 +381,24 @@ function InventoryAdmin() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {displayedItems.length === 0 ? (
                 <tr><td colSpan="4" style={{ textAlign: "center" }}>
                   {loading ? "Cargando..." : "No hay items en el inventario."}
                 </td></tr>
-              ) : filtered.map((item) => (
+              ) : displayedItems.map((item) => (
                 <tr key={item.idInventario}>
-                  <td><code>{item.codigo_interno}</code></td>
-                  <td>{item.talla || "No especificada"}</td>
-                  <td>{getPrendaNombre(item.idPrenda)}</td>
-                  <td>{getEstadoBadge(item.estado)}</td>                  
+                  <td style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {item.prenda?.thumbnail_url ? (
+                      <img src={item.prenda.thumbnail_url} alt="thumb" style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 6 }} />
+                    ) : null}
+                    <code>{item.codigo_interno}</code>
+                  </td>
+                  <td>{item.talla || item.prenda?.talla || "No especificada"}</td>
+                  <td>
+                    <div style={{ fontWeight: 600 }}>{item.prenda?.nombre_prenda || getPrendaNombre(item.idPrenda)}</div>
+                    {item.prenda?.color ? <div style={{ fontSize: '0.9rem', color: '#666' }}>{item.prenda.color}</div> : null}
+                  </td>
+                  <td>{getEstadoBadge(item.estado)}</td>
                   <td style={{ display: "flex", gap: "8px" }}>
                     <button className="btn btn-secondary" onClick={() => setEditingItem({ ...item })}>
                       Cambiar estado
@@ -350,7 +410,6 @@ function InventoryAdmin() {
                       Eliminar
                     </button>
                   </td>
-                  
                 </tr>
               ))}
             </tbody>
