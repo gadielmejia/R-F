@@ -35,6 +35,7 @@ function DashboardUser() {
   // --- ESTADOS PARA LA NOTIFICACIÓN ESTILO APPLE ---
   const [toast, setToast] = useState({ show: false, message: "" });
   const [toastTimeoutId, setToastTimeoutId] = useState(null);
+  const [carouselIndexById, setCarouselIndexById] = useState({});
 
   const loadData = async () => {
     setLoading(true);
@@ -103,6 +104,39 @@ function DashboardUser() {
     setModalProduct(null);
     setSelectedTalla("");
     setSelectedCantidad(1);
+  };
+
+  const getProductImageIndex = (product) => {
+    const total = product?.images?.length || 0;
+    if (!total) return 0;
+    return carouselIndexById[product.idPrenda] || 0;
+  };
+
+  const setProductImageIndex = (productId, index) => {
+    setCarouselIndexById((prev) => ({
+      ...prev,
+      [productId]: index,
+    }));
+  };
+
+  const prevProductImage = (product) => {
+    const total = product?.images?.length || 0;
+    if (!total) return;
+    const nextIndex = (getProductImageIndex(product) - 1 + total) % total;
+    setProductImageIndex(product.idPrenda, nextIndex);
+  };
+
+  const nextProductImage = (product) => {
+    const total = product?.images?.length || 0;
+    if (!total) return;
+    const nextIndex = (getProductImageIndex(product) + 1) % total;
+    setProductImageIndex(product.idPrenda, nextIndex);
+  };
+
+  const getProductImageForDisplay = (product) => {
+    const images = product?.images || [];
+    const index = getProductImageIndex(product);
+    return images[index]?.url || "";
   };
 
   const getTallasDisponibles = (product) => {
@@ -387,10 +421,54 @@ function DashboardUser() {
             <button className="modal-close" onClick={closeProductModal} aria-label="Cerrar detalle">×</button>
             <div className="detail-grid">
               <div className="detail-image">
-                {getProductImage(selectedProduct) ? (
-                  <img src={getProductImage(selectedProduct)} alt={selectedProduct.nombre_prenda} />
+                {getProductImageForDisplay(selectedProduct) ? (
+                  <img src={getProductImageForDisplay(selectedProduct)} alt={selectedProduct.nombre_prenda} />
                 ) : (
                   <div className="detail-image-empty">👗</div>
+                )}
+
+                {selectedProduct.images?.length > 1 && (
+                  <>
+                    <div className="carousel-counter">
+                      {getProductImageIndex(selectedProduct) + 1}/{selectedProduct.images.length}
+                    </div>
+                    <button
+                      className="carousel-button prev"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        prevProductImage(selectedProduct);
+                      }}
+                      aria-label="Imagen anterior"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      className="carousel-button next"
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nextProductImage(selectedProduct);
+                      }}
+                      aria-label="Siguiente imagen"
+                    >
+                      ›
+                    </button>
+                    <div className="carousel-indicators">
+                      {selectedProduct.images.map((_, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          className={`carousel-indicator ${getProductImageIndex(selectedProduct) === index ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setProductImageIndex(selectedProduct.idPrenda, index);
+                          }}
+                          aria-label={`Ver imagen ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
               <div className="detail-info">

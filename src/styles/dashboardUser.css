@@ -313,6 +313,53 @@ body.dark .dashboard-page .footer {
   justify-content: center;
   font-size: 2.5rem;
 }
+.carousel-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.carousel-button:hover {
+  background: rgba(0, 0, 0, 0.55);
+  transform: translateY(-50%) scale(1.05);
+}
+.carousel-button.prev {
+  left: 12px;
+}
+.carousel-button.next {
+  right: 12px;
+}
+.carousel-indicators {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+}
+.carousel-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.carousel-indicator.active {
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+}
 .product-card-content {
   padding: 20px;
   display: flex;
@@ -474,6 +521,7 @@ body.dark .dashboard-page .footer {
   min-height: 100%;
 }
 .detail-image {
+  position: relative;
   border-radius: 20px;
   overflow: hidden;
   background: #f3f4f6;
@@ -485,6 +533,66 @@ body.dark .dashboard-page .footer {
   height: 100%;
   object-fit: cover;
   display: block;
+}
+.carousel-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+  z-index: 2;
+}
+.carousel-button:hover {
+  background: rgba(0, 0, 0, 0.55);
+}
+.carousel-button.prev {
+  left: 12px;
+}
+.carousel-button.next {
+  right: 12px;
+}
+.carousel-counter {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
+  z-index: 2;
+}
+.carousel-indicators {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+.carousel-indicator {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.75);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+.carousel-indicator.active {
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
 }
 .detail-image-empty {
   min-height: 320px;
