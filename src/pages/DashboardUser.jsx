@@ -305,34 +305,14 @@ function DashboardUser() {
               </div>
             ) : filtered.map((p) => (
               <article key={p.idPrenda} className="product-card card">
-                <div style={{
-                  width: "100%",
-                  minHeight: "160px",
-                  borderRadius: "14px",
-                  overflow: "hidden",
-                  marginBottom: "0.75rem",
-                  background: "#f3f4f6",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}>
+                <div className="product-card-image">
                   {getProductImage(p) ? (
                     <img
                       src={getProductImage(p)}
                       alt={p.nombre_prenda}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
                     />
                   ) : (
-                    <div style={{
-                      width: "100%",
-                      height: "160px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "2.5rem"
-                    }}>
-                      👗
-                    </div>
+                    <div className="product-card-image-empty">👗</div>
                   )}
                 </div>
                 <span style={{
