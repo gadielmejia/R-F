@@ -21,10 +21,12 @@ function DashboardAdmin() {
 
     const loadStats = async () => {
       try {
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
         const [usersRes, prendasRes, reservasRes] = await Promise.all([
-          api.get('/api/usuarios'),
-          api.get('/api/prendas'),
-          api.get('/api/reservas'),
+          api.get('/api/usuarios', { headers }),
+          api.get('/api/prendas', { headers }),
+          api.get('/api/reservas', { headers }),
         ]);
 
         const usersData = usersRes.data;

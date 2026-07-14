@@ -27,7 +27,8 @@ function ReservasAdmin() {
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("currentUser") || "null");
-    if (!user || user.role !== "admin") { navigate("/login", { replace: true }); return; }
+    const role = (user?.role || user?.rol_nombre || "").toString().toLowerCase();
+    if (!user || !["admin", "empleado"].includes(role)) { navigate("/login", { replace: true }); return; }
     loadData();
   }, [navigate]);
 
@@ -35,9 +36,11 @@ function ReservasAdmin() {
     setLoading(true);
     setError("");
     try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       const [resRes, citasRes] = await Promise.all([
-        api.get("/api/reservas"),
-        api.get("/api/citas"),
+        api.get("/api/reservas", { headers }),
+        api.get("/api/citas", { headers }),
       ]);
       setReservas(resRes.data?.data || []);
       setCitas(citasRes.data?.data || []);
@@ -53,11 +56,12 @@ function ReservasAdmin() {
     e.preventDefault();
     setError("");
     try {
+      const token = localStorage.getItem("token");
       const response = await api.put(`/api/reservas/${editingReserva.idReserva}`, {
         estado: editingReserva.estado,
         observaciones: editingReserva.observaciones,
         fecha_devolucion: editingReserva.fecha_devolucion || null,
-      });
+      }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       const updatedReserva = response.data?.data;
       setReservas(prev => prev.map(r =>
         r.idReserva === editingReserva.idReserva ? updatedReserva : r
@@ -71,7 +75,8 @@ function ReservasAdmin() {
 
   const handleUpdateCita = async (idCita, nuevoEstado) => {
     try {
-      const response = await api.put(`/api/citas/${idCita}`, { estado: nuevoEstado });
+      const token = localStorage.getItem("token");
+      const response = await api.put(`/api/citas/${idCita}`, { estado: nuevoEstado }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       const updatedCita = response.data?.data;
       setCitas(prev => prev.map(c => c.idCita === idCita ? updatedCita : c));
     } catch (err) {

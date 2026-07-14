@@ -204,10 +204,7 @@ function InventoryAdmin() {
     if (!confirm("¿Eliminar este item del inventario?")) return;
     try {
       const res = await api.delete(`/api/inventario/${id}`);
-      if (!res.ok) {
-        const d = await res.json();
-        throw new Error(d.message);
-      }
+      const data = res.data;
       setInventory((prev) => prev.filter((i) => i.idInventario !== id));
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error eliminando item.');

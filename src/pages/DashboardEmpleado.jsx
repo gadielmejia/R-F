@@ -25,7 +25,14 @@ function DashboardEmpleado() {
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    const rol = currentUser?.role || currentUser?.rol_nombre?.toLowerCase();
+    const normalizeRole = (cu) => {
+      if (!cu) return "";
+      let r = cu.role ?? cu.rol_nombre ?? cu.rol ?? "";
+      if (typeof r === "string") return r.toLowerCase();
+      if (typeof r === "object") return (r.nombre || r.name || "").toString().toLowerCase();
+      return "";
+    };
+    const rol = normalizeRole(currentUser);
     if (!currentUser || rol !== "empleado") {
       navigate("/login", { replace: true });
       return;
@@ -99,23 +106,26 @@ function DashboardEmpleado() {
 
     setSavingUser(true);
     try {
-      const res = await api.post("/api/usuarios", {
-        nombre: form.nombre.trim(),
-        documento: form.documento.trim(),
-        telefono: form.telefono.trim() || null,
-        correo: form.correo.trim().toLowerCase(),
-        Contrasena: form.Contrasena,
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
-
+      const token = localStorage.getItem("token");
+      const res = await api.post(
+        "/api/usuarios",
+        {
+          nombre: form.nombre.trim(),
+          documento: form.documento.trim(),
+          telefono: form.telefono.trim() || null,
+          correo: form.correo.trim().toLowerCase(),
+          Contrasena: form.Contrasena,
+        },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+      const data = res.data;
       setUsuarios(prev => [data.data, ...prev]);
       setForm({ nombre: "", documento: "", telefono: "", correo: "", Contrasena: "", confirmar: "" });
       setShowForm(false);
       setSuccess("✅ Usuario creado exitosamente.");
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.message || err.message || "Error creando usuario.");
     } finally {
       setSavingUser(false);
     }
@@ -134,9 +144,9 @@ function DashboardEmpleado() {
 
   const stats = {
     total: usuarios.length,
-    admins: usuarios.filter(u => u.rol_nombre === "admin").length,
-    empleados: usuarios.filter(u => u.rol_nombre === "empleado").length,
-    clientes: usuarios.filter(u => ["usuario", "cliente"].includes(u.rol_nombre)).length,
+    admins: usuarios.filter(u => (u.rol_nombre || "").toLowerCase() === "admin").length,
+    empleados: usuarios.filter(u => (u.rol_nombre || "").toLowerCase() === "empleado").length,
+    clientes: usuarios.filter(u => ["usuario", "cliente"].includes(((u.rol_nombre || "").toLowerCase()))).length,
   };
 
   return (
@@ -147,6 +157,8 @@ function DashboardEmpleado() {
           <div className="nav-actions">
             <Link to="/admin/productos" className="nav-link">Prendas</Link>
             <Link to="/admin/inventario" className="nav-link">Inventario</Link>
+            <Link to="/admin/usuarios" className="nav-link">Usuarios</Link>
+            <Link to="/admin/reservas" className="nav-link">Reservas</Link>
             <span style={{ color: "#fff", fontSize: "0.85rem" }}>
               👤 {user.nombre}
             </span>

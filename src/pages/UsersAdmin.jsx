@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import ThemeToggle from "../components/ThemeToggle";
+import { api } from "../utils/api";
 import "../styles/Dashboardad.css";
 
 const emptyForm = (roleId = "") => ({
@@ -22,13 +23,14 @@ function UsersAdmin() {
   const [userForm, setUserForm] = useState(emptyForm());
   const [editingUser, setEditingUser] = useState(null);
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
+  const isAdmin = ((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin");
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
-    const currentRol = currentUser?.rol_nombre?.toLowerCase();
-    const role = currentUser?.role || (currentRol === "admin" ? "admin" : currentRol === "usuario" ? "user" : null);
+    const currentRol = (currentUser?.rol_nombre || currentUser?.role || "").toString().toLowerCase();
+    const role = currentUser?.role || (currentRol === "admin" ? "admin" : currentRol === "usuario" ? "user" : currentRol);
 
-    if (!currentUser || role !== "admin") {
+    if (!currentUser || !["admin", "empleado"].includes(role)) {
       navigate("/login", { replace: true });
       return;
     }
@@ -36,22 +38,17 @@ function UsersAdmin() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [rolesResponse, usersResponse] = await Promise.all([
-          fetch("/api/roles"),
-          fetch("/api/usuarios"),
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const [rolesRes, usersRes] = await Promise.all([
+          api.get("/api/roles", { headers }),
+          api.get("/api/usuarios", { headers }),
         ]);
 
-        const rolesData = await rolesResponse.json();
-        const usersData = await usersResponse.json();
-
-        if (rolesResponse.ok) {
-          const roleList = rolesData.data || [];
-          setRoles(roleList);
-        }
-
-        if (usersResponse.ok) {
-          setUsers(usersData.data || []);
-        }
+        const roleList = rolesRes.data?.data || [];
+        const usersList = usersRes.data?.data || [];
+        setRoles(roleList);
+        setUsers(usersList);
       } catch (error) {
         console.error(error);
         setFormError("No se pudieron cargar los usuarios.");
@@ -65,44 +62,34 @@ function UsersAdmin() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
-    if (!userForm.nombre.trim() || !userForm.correo.trim() || !userForm.Contrasena || !userForm.idRol) {
-      setFormError("Completa nombre, correo, contraseña y selecciona un rol.");
+    if (!userForm.nombre.trim() || !userForm.correo.trim() || !userForm.Contrasena || (isAdmin && !userForm.idRol)) {
+      setFormError(isAdmin ? "Completa nombre, correo, contraseña y selecciona un rol." : "Completa nombre, correo y contraseña.");
       return;
     }
 
-    try {
-      setLoading(true);
-      setFormError("");
-      const payload = {
-        nombre: userForm.nombre.trim(),
-        correo: userForm.correo.trim().toLowerCase(),
-        Contrasena: userForm.Contrasena,
-        telefono: userForm.telefono.trim(),
-        idRol: Number(userForm.idRol),
-      };
+      try {
+        setLoading(true);
+        setFormError("");
+        const token = localStorage.getItem("token");
+        const payload = {
+          nombre: userForm.nombre.trim(),
+          correo: userForm.correo.trim().toLowerCase(),
+          Contrasena: userForm.Contrasena,
+          telefono: userForm.telefono.trim(),
+          idRol: Number(userForm.idRol),
+        };
 
-      if (userForm.documento.trim()) {
-        payload.documento = userForm.documento.trim();
+        if (userForm.documento.trim()) payload.documento = userForm.documento.trim();
+
+        const res = await api.post("/api/usuarios", payload, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const data = res.data;
+        setUsers((prev) => [data.data, ...prev]);
+        setUserForm(emptyForm());
+      } catch (error) {
+        setFormError(error.response?.data?.message || error.message || "Error creando usuario.");
+      } finally {
+        setLoading(false);
       }
-
-      const response = await fetch("/api/usuarios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "No se pudo crear el usuario.");
-      }
-
-      setUsers((prev) => [data.data, ...prev]);
-      setUserForm(emptyForm());
-    } catch (error) {
-      setFormError(error.message);
-    } finally {
-      setLoading(false);
-    }
   };
 
   const isCurrentAccount = (user) => {
@@ -129,11 +116,8 @@ function UsersAdmin() {
   const handleDeleteUser = async (id) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/usuarios/${id}`, { method: "DELETE" });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || "No se pudo eliminar el usuario.");
-      }
+      const token = localStorage.getItem("token");
+      await api.delete(`/api/usuarios/${id}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       setUsers((prev) => prev.filter((user) => user.idUsuario !== id));
     } catch (error) {
       setFormError(error.message);
@@ -167,17 +151,9 @@ function UsersAdmin() {
         payload.Contrasena = editingUser.Contrasena;
       }
 
-      const response = await fetch(`/api/usuarios/${editingUser.idUsuario}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "No se pudo actualizar el usuario.");
-      }
-
+      const token = localStorage.getItem("token");
+      const res = await api.put(`/api/usuarios/${editingUser.idUsuario}`, payload, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const data = res.data;
       setUsers((prev) => prev.map((user) => (user.idUsuario === editingUser.idUsuario ? data.data : user)));
       setEditingUser(null);
     } catch (error) {
@@ -273,10 +249,11 @@ function UsersAdmin() {
               value={userForm.idRol}
               onChange={(e) => setUserForm({ ...userForm, idRol: e.target.value })}
               className="role-select"
-              required
+              required={isAdmin}
+              disabled={!isAdmin}
             >
               <option value="" disabled>
-                Selecciona un rol
+                {isAdmin ? 'Selecciona un rol' : 'El rol será asignado automáticamente'}
               </option>
               {roles.map((role) => (
                 <option key={role.idRol} value={role.idRol}>
@@ -322,27 +299,29 @@ function UsersAdmin() {
                       <td>{user.correo}</td>
                       <td>{getRoleName(user)}</td>
                       <td style={{ display: "flex", gap: "8px" }}>
+                                <button
+                                  className="btn btn-secondary"
+                                  onClick={() => {
+                                    const matchingRole = roles.find((roleItem) => String(roleItem.idRol) === String(user?.idRol));
+                                    setEditingUser({
+                                      ...user,
+                                      Contrasena: "",
+                                      idRol: matchingRole ? String(matchingRole.idRol) : String(user?.idRol || ""),
+                                    });
+                                  }}
+                                  disabled={!((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin")}
+                                  title={!((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin") ? "Solo administradores pueden editar usuarios" : "Editar"}
+                                >
+                                  Editar
+                                </button>
                         <button
-                          className="btn btn-secondary"
-                          onClick={() => {
-                            const matchingRole = roles.find((roleItem) => String(roleItem.idRol) === String(user?.idRol));
-                            setEditingUser({
-                              ...user,
-                              Contrasena: "",
-                              idRol: matchingRole ? String(matchingRole.idRol) : String(user?.idRol || ""),
-                            });
-                          }}
-                        >
-                          Editar
-                        </button>
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => !selfAccount && handleDeleteUser(user.idUsuario)}
-                          disabled={selfAccount}
-                          title={selfAccount ? "No puedes eliminar tu propia cuenta" : "Eliminar usuario"}
-                        >
-                          {selfAccount ? "No eliminar" : "Eliminar"}
-                        </button>
+                                  className="btn btn-danger"
+                                  onClick={() => !selfAccount && handleDeleteUser(user.idUsuario)}
+                                  disabled={selfAccount || !((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin")}
+                                  title={selfAccount ? "No puedes eliminar tu propia cuenta" : (!((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin") ? "Solo administradores pueden eliminar usuarios" : "Eliminar usuario")}
+                                >
+                                  {selfAccount ? "No eliminar" : "Eliminar"}
+                                </button>
                       </td>
                     </tr>
                   );
@@ -368,6 +347,7 @@ function UsersAdmin() {
                   value={editingUser.nombre || ""}
                   onChange={(e) => setEditingUser({ ...editingUser, nombre: e.target.value })}
                   required
+                  disabled={!((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin")}
                 />
                 <input
                   name="documento"
@@ -385,6 +365,7 @@ function UsersAdmin() {
                   value={editingUser.correo || ""}
                   onChange={(e) => setEditingUser({ ...editingUser, correo: e.target.value })}
                   required
+                  disabled={!((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin")}
                 />
                 <input
                   name="telefono"
@@ -395,6 +376,7 @@ function UsersAdmin() {
                   placeholder="Teléfono (opcional)"
                   value={editingUser.telefono || ""}
                   onChange={(e) => setEditingUser({ ...editingUser, telefono: e.target.value.replace(/\D/g, '') })}
+                  disabled={!((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin")}
                 />
                 <input
                   name="Contrasena"
@@ -403,13 +385,14 @@ function UsersAdmin() {
                   placeholder="Nueva contraseña (dejar vacío para no cambiar)"
                   value={editingUser.Contrasena || ""}
                   onChange={(e) => setEditingUser({ ...editingUser, Contrasena: e.target.value })}
+                  disabled={!((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin")}
                 />
                 <div style={{ fontSize: "0.95rem", color: "#4b5563" }}>
                   Rol actual: <strong>{getRoleName(editingUser)}</strong>
                 </div>
                 <select
                   value={editingUser.idRol ? String(editingUser.idRol) : ""}
-                  disabled
+                  disabled={!((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin")}
                   className="role-select"
                 >
                   {roles.map((role) => (
@@ -419,7 +402,7 @@ function UsersAdmin() {
                   ))}
                 </select>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  <button className="btn btn-primary" type="submit" disabled={loading}>
+                  <button className="btn btn-primary" type="submit" disabled={loading || !isAdmin}>
                     {loading ? "Guardando..." : "Guardar cambios"}
                   </button>
                   <button className="btn btn-secondary" type="button" onClick={() => setEditingUser(null)}>
