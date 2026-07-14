@@ -175,7 +175,7 @@ function UsersAdmin() {
     <>
       <nav className="app-nav">
         <div className="nav-inner">
-          <Link to="/dashboardadmin" className="brand">
+          <Link to={currentUser?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin'} className="brand">
             RentStyle
           </Link>
           <div className="nav-actions">

@@ -250,6 +250,9 @@ function InventoryAdmin() {
   }
   const dashboardLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
   const usersLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/admin/usuarios';
+  const productsLink = '/admin/productos';
+  const inventoryLink = '/admin/inventario';
+  const reservasLink = '/admin/reservas';
 
   return (
     <>
@@ -257,10 +260,10 @@ function InventoryAdmin() {
         <div className="nav-inner">
           <Link to={dashboardLink} className="brand">RentStyle</Link>
           <div className="nav-actions">
-            <Link to="/admin/productos" className="nav-link">Productos</Link>
+            <Link to={productsLink} className="nav-link">Productos</Link>
             <Link to={usersLink} className="nav-link">Usuarios</Link>
-            <Link to="/admin/inventario" className="nav-link">Inventario</Link>
-            <Link to="/admin/reservas" className="dashboard-button">Gestión de reservas</Link>
+            <Link to={inventoryLink} className="nav-link">Inventario</Link>
+            <Link to={reservasLink} className="dashboard-button">Gestión de reservas</Link>
             <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
@@ -303,7 +306,7 @@ function InventoryAdmin() {
         <div className="dashboard-card">
           <h2>Agregar unidad al inventario</h2>
           <div className="form-container" style={{ justifyContent: 'center' }}>
-            <Link to="/admin/productos" className="btn btn-primary" style={{ width: '100%', textAlign: 'center' }}>
+            <Link to={productsLink} className="btn btn-primary" style={{ width: '100%', textAlign: 'center' }}>
               Ir a productos para agregar
             </Link>
           </div>

@@ -22,6 +22,11 @@ function DashboardEmpleado() {
   const [savingUser, setSavingUser] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
+  const dashboardLink = user?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
+  const productsLink = '/admin/productos';
+  const inventoryLink = '/admin/inventario';
+  const usersLink = '/admin/usuarios';
+  const reservasLink = '/admin/reservas';
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -155,10 +160,10 @@ function DashboardEmpleado() {
         <div className="nav-inner">
           <Link to="/dashboardempleado" className="brand">RentStyle</Link>
           <div className="nav-actions">
-            <Link to="/admin/productos" className="nav-link">Prendas</Link>
-            <Link to="/admin/inventario" className="nav-link">Inventario</Link>
-            <Link to="/admin/usuarios" className="nav-link">Usuarios</Link>
-            <Link to="/admin/reservas" className="nav-link">Reservas</Link>
+            <Link to={productsLink} className="nav-link">Prendas</Link>
+            <Link to={inventoryLink} className="nav-link">Inventario</Link>
+            <Link to={usersLink} className="nav-link">Usuarios</Link>
+            <Link to={reservasLink} className="nav-link">Reservas</Link>
             <span style={{ color: "#fff", fontSize: "0.85rem" }}>
               👤 {user.nombre}
             </span>
@@ -197,8 +202,8 @@ function DashboardEmpleado() {
         </div>
 
         <div className="dashboard-buttons-row">
-          <Link to="/admin/productos" className="dashboard-button">Gestionar prendas</Link>
-          <Link to="/admin/inventario" className="dashboard-button">Gestionar inventario</Link>
+          <Link to={productsLink} className="dashboard-button">Gestionar prendas</Link>
+          <Link to={inventoryLink} className="dashboard-button">Gestionar inventario</Link>
         </div>
 
         {/* Botón agregar usuario */}

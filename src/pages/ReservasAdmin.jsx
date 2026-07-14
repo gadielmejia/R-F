@@ -102,16 +102,23 @@ function ReservasAdmin() {
     finalizadas: reservas.filter(r => r.estado === "Finalizada").length,
   };
 
+  const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const dashboardLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
+  const productsLink = '/admin/productos';
+  const usersLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/admin/usuarios';
+  const inventoryLink = '/admin/inventario';
+  const reservasLink = '/admin/reservas';
+
   return (
     <>
       <nav className="app-nav">
         <div className="nav-inner">
-          <Link to="/dashboardadmin" className="brand">RentStyle</Link>
+          <Link to={dashboardLink} className="brand">RentStyle</Link>
           <div className="nav-actions">
-            <Link to="/admin/productos" className="nav-link">Productos</Link>
-            <Link to="/admin/usuarios" className="nav-link">Usuarios</Link>
-            <Link to="/admin/inventario" className="nav-link">Inventario</Link>
-            <Link to="/admin/reservas" className="dashboard-button">Gestión de reservas</Link>
+            <Link to={productsLink} className="nav-link">Productos</Link>
+            <Link to={usersLink} className="nav-link">Usuarios</Link>
+            <Link to={inventoryLink} className="nav-link">Inventario</Link>
+            <Link to={reservasLink} className="dashboard-button">Gestión de reservas</Link>
             <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
