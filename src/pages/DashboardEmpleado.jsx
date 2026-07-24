@@ -23,10 +23,10 @@ function DashboardEmpleado() {
 
   const user = JSON.parse(localStorage.getItem("currentUser") || "{}");
   const dashboardLink = user?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
-  const productsLink = '/admin/productos';
-  const inventoryLink = '/admin/inventario';
-  const usersLink = '/admin/usuarios';
-  const reservasLink = '/admin/reservas';
+  const productsLink = user?.role === 'empleado' ? '/empleado/productos' : '/admin/productos';
+  const inventoryLink = user?.role === 'empleado' ? '/empleado/inventario' : '/admin/inventario';
+  const usersLink = user?.role === 'empleado' ? '/empleado/usuarios' : '/admin/usuarios';
+  const reservasLink = user?.role === 'empleado' ? '/empleado/reservas' : '/admin/reservas';
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");

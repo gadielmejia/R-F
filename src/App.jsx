@@ -25,6 +25,10 @@ function App() {
         <Route path="/admin/usuarios" element={<UsersAdmin />} />
         <Route path="/admin/inventario" element={<InventoryAdmin />} />
         <Route path="/admin/reservas" element={<ReservasAdmin />} />
+        <Route path="/empleado/productos" element={<ProductsAdmin />} />
+        <Route path="/empleado/usuarios" element={<UsersAdmin />} />
+        <Route path="/empleado/inventario" element={<InventoryAdmin />} />
+        <Route path="/empleado/reservas" element={<ReservasAdmin />} />
         <Route path="/dashboarduser" element={<DashboardUser />} />
         <Route path="/dashboardempleado" element={<DashboardEmpleado />} />
         <Route path="/cart" element={<Cart />} />

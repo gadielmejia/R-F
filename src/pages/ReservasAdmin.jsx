@@ -104,10 +104,10 @@ function ReservasAdmin() {
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
   const dashboardLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
-  const productsLink = '/admin/productos';
-  const usersLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/admin/usuarios';
-  const inventoryLink = '/admin/inventario';
-  const reservasLink = '/admin/reservas';
+  const productsLink = currentUser?.role === 'empleado' ? '/empleado/productos' : '/admin/productos';
+  const usersLink = currentUser?.role === 'empleado' ? '/empleado/usuarios' : '/admin/usuarios';
+  const inventoryLink = currentUser?.role === 'empleado' ? '/empleado/inventario' : '/admin/inventario';
+  const reservasLink = currentUser?.role === 'empleado' ? '/empleado/reservas' : '/admin/reservas';
 
   return (
     <>

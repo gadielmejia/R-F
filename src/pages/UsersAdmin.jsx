@@ -24,6 +24,10 @@ function UsersAdmin() {
   const [editingUser, setEditingUser] = useState(null);
   const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
   const isAdmin = ((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin");
+  const productsLink = currentUser?.role === 'empleado' ? '/empleado/productos' : '/admin/productos';
+  const usersLink = currentUser?.role === 'empleado' ? '/empleado/usuarios' : '/admin/usuarios';
+  const inventoryLink = currentUser?.role === 'empleado' ? '/empleado/inventario' : '/admin/inventario';
+  const reservasLink = currentUser?.role === 'empleado' ? '/empleado/reservas' : '/admin/reservas';
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "null");
@@ -179,10 +183,10 @@ function UsersAdmin() {
             RentStyle
           </Link>
           <div className="nav-actions">
-            <Link to="/admin/productos" className="nav-link">Productos</Link>
-            <Link to="/admin/usuarios" className="nav-link">Usuarios</Link>
-            <Link to="/admin/inventario" className="nav-link">Inventario</Link>
-            <Link to="/admin/reservas" className="dashboard-button">Gestión de reservas</Link>
+            <Link to={productsLink} className="nav-link">Productos</Link>
+            <Link to={usersLink} className="nav-link">Usuarios</Link>
+            <Link to={inventoryLink} className="nav-link">Inventario</Link>
+            <Link to={reservasLink} className="dashboard-button">Gestión de reservas</Link>
             <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
