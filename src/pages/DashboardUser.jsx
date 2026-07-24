@@ -36,6 +36,9 @@ function DashboardUser() {
   // --- ESTADOS PARA LA NOTIFICACIÓN ESTILO APPLE ---
   const [toast, setToast] = useState({ show: false, message: "" });
   const [toastTimeoutId, setToastTimeoutId] = useState(null);
+  const [duplicateConfirm, setDuplicateConfirm] = useState(false);
+  const [pendingAddItems, setPendingAddItems] = useState([]);
+  const [pendingDuplicateMessage, setPendingDuplicateMessage] = useState("");
   const [carouselIndexById, setCarouselIndexById] = useState({});
 
   const loadData = async () => {
@@ -86,9 +89,9 @@ function DashboardUser() {
   };
 
   const getAvailabilityLabel = (product) => {
-    const count = product?.inventory?.length || 0;
-    if (count === 1) return "Prenda única";
-    if (count > 1) return `${count} unidades disponibles`;
+    const availableCount = product?.inventory?.filter(inv => inv.estado === 'Disponible').length || 0;
+    if (availableCount === 1) return "Prenda única";
+    if (availableCount > 1) return `${availableCount} unidades disponibles`;
     return "Sin unidades";
   };
 
@@ -142,7 +145,7 @@ function DashboardUser() {
 
   const getTallasDisponibles = (product) => {
     if (!product?.inventory) return [];
-    return [...new Set(product.inventory.map((inv) => inv.talla).filter(Boolean))];
+    return [...new Set(product.inventory.filter(inv => inv.estado === 'Disponible').map((inv) => inv.talla).filter(Boolean))];
   };
 
   const getTallasWithStatus = (product) => {
@@ -150,13 +153,35 @@ function DashboardUser() {
     const tallas = [...new Set(product.inventory.map(inv => inv.talla).filter(Boolean))];
     return tallas.map(talla => {
       const invs = product.inventory.filter(inv => inv.talla === talla);
-      const unavailable = invs.some(i => i.estado !== 'Disponible');
-      // Priorizar 'Alquilado' > 'Reservado' cuando haya varios estados
-      let estado = 'Disponible';
+      const available = invs.some(i => i.estado === 'Disponible');
+      let estado = 'Sin disponibilidad';
       if (invs.some(i => i.estado === 'Alquilado')) estado = 'Alquilado';
       else if (invs.some(i => i.estado === 'Reservado')) estado = 'Reservado';
-      return { talla, available: !unavailable, estado };
+      else if (available) estado = 'Disponible';
+      return { talla, available, estado };
     });
+  };
+
+  const addItemsToCart = (itemsToAdd) => {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    cart.push(...itemsToAdd);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    setCartItems(cart);
+
+    if (toastTimeoutId) clearTimeout(toastTimeoutId);
+    const addedTitle = itemsToAdd[0]?.title || modalProduct.nombre_prenda;
+    const addedTalla = itemsToAdd[0]?.talla || selectedTalla;
+    const addedCantidad = itemsToAdd.length;
+    setToast({ show: true, message: `"${addedTitle}" (Talla ${addedTalla}, Qty ${addedCantidad}) se agregó al carrito.` });
+    const newTimeout = setTimeout(() => {
+      setToast({ show: false, message: "" });
+    }, 3000);
+    setToastTimeoutId(newTimeout);
+
+    setDuplicateConfirm(false);
+    setPendingAddItems([]);
+    setPendingDuplicateMessage("");
+    closeSizeModal();
   };
 
   const confirmarAgregarCarrito = () => {
@@ -169,39 +194,63 @@ function DashboardUser() {
       return;
     }
 
-    // Encontrar un inventario disponible con esa talla
-    const inventarioDisponible = modalProduct.inventory?.find(
-      (inv) => inv.talla === selectedTalla && inv.estado === "Disponible"
-    );
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const alreadyInCartCount = cart.filter(
+      (item) => item.id === modalProduct.idPrenda && item.talla === selectedTalla
+    ).length;
 
-    if (!inventarioDisponible) {
-      alert(`No hay unidades disponibles en talla ${selectedTalla}.`);
+    const availableItems = modalProduct.inventory?.filter(
+      (inv) =>
+        inv.talla === selectedTalla &&
+        inv.estado === "Disponible" &&
+        !cart.some((item) => item.idInventario === inv.idInventario)
+    ) || [];
+
+    if (availableItems.length < selectedCantidad) {
+      if (alreadyInCartCount > 0) {
+        alert(`Ya tienes ${alreadyInCartCount} unidad(es) de esta prenda en talla ${selectedTalla} en el carrito. Solo hay ${availableItems.length} unidad(es) adicionales disponibles.`);
+      } else {
+        alert(`No hay suficientes unidades disponibles en talla ${selectedTalla}. Disponibles: ${availableItems.length}`);
+      }
       return;
     }
 
-    const cart = JSON.parse(localStorage.getItem("cart")) || [];
-    const item = {
+    const itemsToAdd = availableItems.slice(0, selectedCantidad).map((inv) => ({
       id: modalProduct.idPrenda,
-      idInventario: inventarioDisponible.idInventario,
+      idInventario: inv.idInventario,
       title: modalProduct.nombre_prenda,
       price: Number(modalProduct.precio_alquiler),
       image: getProductImage(modalProduct),
       talla: selectedTalla,
-      cantidad: selectedCantidad,
-    };
+      cantidad: 1,
+    }));
 
-    cart.push(item);
-    localStorage.setItem("cart", JSON.stringify(cart));
+    const alreadyAdded = alreadyInCartCount > 0;
+    if (alreadyAdded) {
+      setPendingAddItems(itemsToAdd);
+      setPendingDuplicateMessage(`Ya tienes esta prenda en talla ${selectedTalla} en el carrito. ¿Deseas agregarla de nuevo?`);
+      setDuplicateConfirm(true);
+      return;
+    }
 
-    if (toastTimeoutId) clearTimeout(toastTimeoutId);
+    addItemsToCart(itemsToAdd);
+  };
 
-    setToast({ show: true, message: `"${item.title}" (Talla ${selectedTalla}, Qty ${selectedCantidad}) se agregó al carrito.` });
-    const newTimeout = setTimeout(() => {
-      setToast({ show: false, message: "" });
-    }, 3000);
-    setToastTimeoutId(newTimeout);
+  const handleConfirmDuplicateAdd = () => {
+    if (pendingAddItems.length === 0) {
+      setDuplicateConfirm(false);
+      setPendingDuplicateMessage("");
+      return;
+    }
+    setDuplicateConfirm(false);
+    setPendingDuplicateMessage("");
+    addItemsToCart(pendingAddItems);
+  };
 
-    closeSizeModal();
+  const handleCancelDuplicateAdd = () => {
+    setDuplicateConfirm(false);
+    setPendingAddItems([]);
+    setPendingDuplicateMessage("");
   };
 
   const addToCart = (product) => {
@@ -603,6 +652,26 @@ function DashboardUser() {
               </button>
               <button className="btn btn-secondary" onClick={closeSizeModal} style={{ flex: 1 }}>
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {duplicateConfirm && (
+        <div className="modal-overlay" onClick={handleCancelDuplicateAdd}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: "400px" }}>
+            <button className="modal-close" onClick={handleCancelDuplicateAdd} aria-label="Cerrar">×</button>
+            <h2 style={{ marginBottom: "1rem", textAlign: "center" }}>Confirmar acción</h2>
+            <p style={{ marginBottom: "1.5rem", color: "#334155", lineHeight: 1.6 }}>
+              {pendingDuplicateMessage}
+            </p>
+            <div style={{ display: "flex", gap: "0.75rem" }}>
+              <button className="btn btn-primary" onClick={handleConfirmDuplicateAdd} style={{ flex: 1 }}>
+                Sí, agregar de nuevo
+              </button>
+              <button className="btn btn-secondary" onClick={handleCancelDuplicateAdd} style={{ flex: 1 }}>
+                No, cancelar
               </button>
             </div>
           </div>
