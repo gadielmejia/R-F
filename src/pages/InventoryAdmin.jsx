@@ -226,6 +226,11 @@ function InventoryAdmin() {
   const statsToShow = stats;
 
   const currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
+  const dashboardLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
+  const usersLink = currentUser?.role === 'empleado' ? '/empleado/usuarios' : '/admin/usuarios';
+  const productsLink = currentUser?.role === 'empleado' ? '/empleado/productos' : '/admin/productos';
+  const inventoryLink = currentUser?.role === 'empleado' ? '/empleado/inventario' : '/admin/inventario';
+  const reservasLink = currentUser?.role === 'empleado' ? '/empleado/reservas' : '/admin/reservas';
 
   const displayedItems = selectedEstado ? stateItems.filter((item) => {
     const q = search.toLowerCase();
@@ -248,11 +253,6 @@ function InventoryAdmin() {
       setLoading(false);
     }
   }
-  const dashboardLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/dashboardadmin';
-  const usersLink = currentUser?.role === 'empleado' ? '/dashboardempleado' : '/admin/usuarios';
-  const productsLink = '/admin/productos';
-  const inventoryLink = '/admin/inventario';
-  const reservasLink = '/admin/reservas';
 
   return (
     <>
