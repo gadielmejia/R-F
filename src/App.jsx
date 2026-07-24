@@ -12,6 +12,8 @@ import ReservasAdmin from './pages/ReservasAdmin';
 import Cart from './pages/Cart';
 import Profile from "./pages/Profile";
 import Citas from "./pages/Citas";
+import AgendarCita from "./pages/AgendarCita";
+import MisReservas from "./pages/MisReservas";
 
 function App() {
   return (
@@ -34,6 +36,8 @@ function App() {
         <Route path="/cart" element={<Cart />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/citas" element={<Citas/>} />
+        <Route path="/agendar-cita" element={<AgendarCita />} />
+        <Route path="/mis-reservas" element={<MisReservas />} />
       </Routes>
     </BrowserRouter>
   );

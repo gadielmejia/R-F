@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
-import { api } from "../utils/api";
+import { getAppointmentsByClient, createAppointment } from "../services/appointmentService";
+import { getUsers } from "../services/userService";
 import { useTheme } from "../context/ThemeContext";
 import "../styles/citas.css";
 
@@ -36,8 +37,8 @@ function CitasUser() {
     setLoadingData(true);
     try {
       const [citasRes, usuariosRes] = await Promise.all([
-        api.get(`/api/citas/cliente/${user.idUsuario}`),
-        api.get(`/api/usuarios`),
+        getAppointmentsByClient(user.idUsuario),
+        getUsers(),
       ]);
 
       setCitas(citasRes.data?.data || []);
@@ -86,7 +87,7 @@ function CitasUser() {
     try {
       const fecha_cita = `${fecha}T${hora}:00`;
       const motivo = `${servicio}${notas ? ` - ${notas}` : ""}`;
-      const response = await api.post("/api/citas", {
+      const response = await createAppointment({
         id_cliente: currentUser.idUsuario,
         id_administrador: adminId,
         id_reserva: null,

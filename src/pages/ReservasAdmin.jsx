@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../utils/api";
+import { getReservations } from "../services/reservationService";
+import { updateReservation } from "../services/reservationService";
+import { updateAppointmentState } from "../services/appointmentService";
 import Footer from "../components/Footer";
 import ThemeToggle from "../components/ThemeToggle";
 import "../styles/Dashboardad.css";
@@ -36,12 +38,7 @@ function ReservasAdmin() {
     setLoading(true);
     setError("");
     try {
-      const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      const [resRes, citasRes] = await Promise.all([
-        api.get("/api/reservas", { headers }),
-        api.get("/api/citas", { headers }),
-      ]);
+      const [resRes, citasRes] = await Promise.all([getReservations(), getAppointments()]);
       setReservas(resRes.data?.data || []);
       setCitas(citasRes.data?.data || []);
     } catch (err) {
@@ -57,11 +54,11 @@ function ReservasAdmin() {
     setError("");
     try {
       const token = localStorage.getItem("token");
-      const response = await api.put(`/api/reservas/${editingReserva.idReserva}`, {
+      const response = await updateReservation(editingReserva.idReserva, {
         estado: editingReserva.estado,
         observaciones: editingReserva.observaciones,
         fecha_devolucion: editingReserva.fecha_devolucion || null,
-      }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      });
       const updatedReserva = response.data?.data;
       setReservas(prev => prev.map(r =>
         r.idReserva === editingReserva.idReserva ? updatedReserva : r
@@ -76,7 +73,7 @@ function ReservasAdmin() {
   const handleUpdateCita = async (idCita, nuevoEstado) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await api.put(`/api/citas/${idCita}`, { estado: nuevoEstado }, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const response = await updateAppointmentState(idCita, nuevoEstado);
       const updatedCita = response.data?.data;
       setCitas(prev => prev.map(c => c.idCita === idCita ? updatedCita : c));
     } catch (err) {

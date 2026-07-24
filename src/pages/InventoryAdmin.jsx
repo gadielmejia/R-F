@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import ThemeToggle from "../components/ThemeToggle";
-import { api } from "../utils/api";
+import { getInventory, getInventorySummary, getInventoryByState, createInventory, updateInventory, deleteInventory } from "../services/inventoryService";
+import { getProducts } from "../services/productService";
 import { useTheme } from "../context/ThemeContext";
 import "../styles/Dashboardad.css";
 
@@ -38,7 +39,7 @@ function InventoryAdmin() {
 
   const loadSummary = async () => {
     try {
-      const res = await api.get('/api/inventario/summary');
+      const res = await getInventorySummary();
       const data = res.data?.data || {};
       setStats({
         total: data.total || 0,
@@ -56,8 +57,8 @@ function InventoryAdmin() {
     setLoading(true);
     try {
       const [invRes, prendasRes] = await Promise.all([
-        api.get("/api/inventario"),
-        api.get("/api/prendas"),
+        getInventory(),
+        getProducts(),
       ]);
       const invData = invRes.data;
       const prendasData = prendasRes.data;
@@ -110,7 +111,7 @@ function InventoryAdmin() {
     }
     setLoading(true);
     try {
-      const res = await api.post("/api/inventario", {
+      const res = await createInventory({
         idPrenda: Number(form.idPrenda),
         codigo_interno: form.codigo_interno.trim().toUpperCase(),
         estado: form.estado,
@@ -160,7 +161,7 @@ function InventoryAdmin() {
 
     setLoading(true);
     try {
-      const res = await api.post('/api/inventario', {
+      const res = await createInventory({
         idPrenda: Number(lotForm.idPrenda),
         lote_data: {
           nombre_lote: lotForm.nombre_lote.trim(),
@@ -185,7 +186,7 @@ function InventoryAdmin() {
     setError("");
     setLoading(true);
     try {
-      const res = await api.put(`/api/inventario/${editingItem.idInventario}`, {
+      const res = await updateInventory(editingItem.idInventario, {
         estado: editingItem.estado,
       });
       const data = res.data;
@@ -203,8 +204,7 @@ function InventoryAdmin() {
   const handleDelete = async (id) => {
     if (!confirm("¿Eliminar este item del inventario?")) return;
     try {
-      const res = await api.delete(`/api/inventario/${id}`);
-      const data = res.data;
+      await deleteInventory(id);
       setInventory((prev) => prev.filter((i) => i.idInventario !== id));
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Error eliminando item.');
@@ -244,7 +244,7 @@ function InventoryAdmin() {
     setLoading(true);
     setError('');
     try {
-      const res = await api.get(`/api/inventario/estado/${encodeURIComponent(estado)}`);
+      const res = await getInventoryByState(estado);
       const data = res.data?.data || [];
       setStateItems(data);
     } catch (err) {
