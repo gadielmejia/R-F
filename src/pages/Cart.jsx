@@ -1,7 +1,9 @@
 ﻿import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
-import { api } from "../utils/api";
+import { getUsers } from "../services/userService";
+import { createReservation } from "../services/reservationService";
+import { createAppointment } from "../services/appointmentService";
 import { useTheme } from "../context/ThemeContext";
 import "../styles/cart.css"; // Ruta hacia tus estilos del carrito
 
@@ -51,7 +53,7 @@ function Cart() {
 
   const loadAdmin = async () => {
     try {
-      const response = await api.get("/api/usuarios");
+      const response = await getUsers();
       const users = response.data?.data || [];
       const admin = users.find(
         (u) => u.idRol === 1 || u.rol_nombre?.toLowerCase() === "admin" || u.role?.toLowerCase() === "admin"
@@ -138,7 +140,7 @@ function Cart() {
       const fecha_reserva = today.toISOString().split("T")[0];
       
       // Crear la reserva con detalles e inventarios
-      const reservaResponse = await api.post("/api/reservas/crear-con-detalles", {
+      const reservaResponse = await createReservation({
         id_cliente: currentUser.idUsuario,
         id_administrador: adminId,
         fecha_reserva: fecha_reserva,
@@ -185,7 +187,7 @@ function Cart() {
       const idReserva = await updatePrendasEstado();
       
       // Crear cita asociada a la reserva
-      const citaResponse = await api.post("/api/citas", {
+      const citaResponse = await createAppointment({
         id_cliente: currentUser.idUsuario,
         id_administrador: adminId,
         id_reserva: idReserva,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../utils/api";
+import { getReservationsByClient, updateReservation } from "../services/reservationService";
 import Footer from "../components/Footer";
 import ThemeToggle from "../components/ThemeToggle";
 
@@ -26,9 +26,8 @@ function MisReservas() {
 
   const loadReservas = async (idUsuario) => {
     try {
-      const res = await api.get(`/reservas/cliente/${idUsuario}`);
-      const data = await res.json();
-      setReservas(res.ok ? (data.data || []) : []);
+      const res = await getReservationsByClient(idUsuario);
+      setReservas(res.data?.data || []);
     } catch {
       setReservas([]);
     } finally {
@@ -47,11 +46,11 @@ function MisReservas() {
 
     setCancelando(reserva.idReserva);
     try {
-      const res = await api.put(`/reservas/${reserva.idReserva}`, { estado: "Cancelada" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const res = await updateReservation(reserva.idReserva, { estado: "Cancelada" });
+      const updated = res.data?.data;
+      if (!updated) throw new Error("Error actualizando reserva.");
       setReservas(prev => prev.map(r =>
-        r.idReserva === reserva.idReserva ? { ...r, estado: "Cancelada" } : r
+        r.idReserva === reserva.idReserva ? updated : r
       ));
     } catch (err) {
       alert("Error al cancelar: " + err.message);

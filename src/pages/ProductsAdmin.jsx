@@ -2,7 +2,8 @@ import { Fragment, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import ThemeToggle from "../components/ThemeToggle";
-import { api } from "../utils/api";
+import { getProducts, createProduct, updateProduct, deleteProduct } from "../services/productService";
+import { getCategories } from "../services/categoryService";
 import { useTheme } from "../context/ThemeContext";
 import "../styles/Dashboardad.css";
 
@@ -41,7 +42,7 @@ function ProductsAdmin() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [prodRes, catRes] = await Promise.all([api.get('/api/prendas'), api.get('/api/categorias')]);
+      const [prodRes, catRes] = await Promise.all([getProducts(), getCategories()]);
       const prodData = prodRes.data;
       const catData = catRes.data;
       setProducts(prodData.data || []);
@@ -230,7 +231,7 @@ function ProductsAdmin() {
           form.append('inventory_codes', JSON.stringify(batchItems.map(item => ({ codigo: item.code, talla: item.talla }))));
         }
         productFiles.slice(0,10).forEach(f => form.append('images', f));
-        res = await api.post('/api/prendas', form);
+        res = await createProduct(form);
         const data = res.data;
         setProducts(prev => [data.data, ...prev]);
         setProductForm({ ...emptyForm, idCategoria: String(categories[0]?.idCategoria || "") });
@@ -288,7 +289,7 @@ function ProductsAdmin() {
       if (editingProduct.newInventoryCodes && editingProduct.newInventoryCodes.length > 0) {
         form.append('inventory_codes', JSON.stringify(editingProduct.newInventoryCodes));
       }
-      const res = await api.put(`/api/prendas/${editingProduct.idPrenda}`, form);
+      const res = await updateProduct(editingProduct.idPrenda, form);
       const data = res.data;
       setProducts(prev => prev.map(p => p.idPrenda === editingProduct.idPrenda ? data.data : p));
       setEditingProduct(null);
@@ -302,8 +303,7 @@ function ProductsAdmin() {
   const handleDelete = async (id) => {
     if (!confirm("¿Eliminar este producto?")) return;
     try {
-      const res = await api.delete(`/api/prendas/${id}`);
-      const data = res.data;
+      await deleteProduct(id);
       setProducts(prev => prev.filter(p => p.idPrenda !== id));
     } catch (err) {
       setError(err.message);

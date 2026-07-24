@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import ThemeToggle from "../components/ThemeToggle";
-import { api } from "../utils/api";
+import { getUsers } from "../services/userService";
+import { getProducts } from "../services/productService";
+import { getReservations } from "../services/reservationService";
 import "../styles/Dashboardad.css";
 
 function DashboardAdmin() {
@@ -21,12 +23,10 @@ function DashboardAdmin() {
 
     const loadStats = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
         const [usersRes, prendasRes, reservasRes] = await Promise.all([
-          api.get('/api/usuarios', { headers }),
-          api.get('/api/prendas', { headers }),
-          api.get('/api/reservas', { headers }),
+          getUsers(),
+          getProducts(),
+          getReservations(),
         ]);
 
         const usersData = usersRes.data;

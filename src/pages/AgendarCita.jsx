@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../utils/api";
+import { updateAppointmentState, createAppointment } from "../services/appointmentService";
+import { getReservationsByClient } from "../services/reservationService";
+import { getUsers } from "../services/userService";
 import Footer from "../components/Footer";
 import ThemeToggle from "../components/ThemeToggle";
 
@@ -24,13 +26,13 @@ function AgendarCita() {
   const loadData = async () => {
     try {
       const [resRes, citasRes, admRes] = await Promise.all([
-        api.get(`/reservas/cliente/${user.idUsuario}`),
-        api.get(`/citas/cliente/${user.idUsuario}`),
-        api.get("/usuarios"),
+        getReservationsByClient(user.idUsuario),
+        getAppointmentsByClient(user.idUsuario),
+        getUsers(),
       ]);
-      const resData = await resRes.json();
-      const citasData = await citasRes.json();
-      const admData = await admRes.json();
+      const resData = resRes.data;
+      const citasData = citasRes.data;
+      const admData = admRes.data;
 
       const activas = (resData.data || []).filter(r =>
         ["Pendiente", "Confirmada"].includes(r.estado)
@@ -52,11 +54,11 @@ function AgendarCita() {
   const cancelarCita = async (idCita) => {
     if (!confirm("¿Cancelar esta cita?")) return;
     try {
-      const res = await api.put(`/citas/${idCita}`, { estado: "Cancelada" });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.message); }
-      setCitas(prev => prev.map(c => c.idCita === idCita ? { ...c, estado: "Cancelada" } : c));
+      const res = await updateAppointmentState(idCita, "Cancelada");
+      const updated = res.data?.data;
+      setCitas(prev => prev.map(c => c.idCita === idCita ? updated || { ...c, estado: "Cancelada" } : c));
     } catch (err) {
-      alert("Error al cancelar: " + err.message);
+      alert("Error al cancelar: " + (err.message || "No se pudo cancelar la cita."));
     }
   };
 
@@ -69,15 +71,14 @@ function AgendarCita() {
     setLoading(true);
     try {
       const fechaHora = `${form.fecha_cita}T${form.hora_cita}:00`;
-      const res = await api.post("/citas", {
+      const res = await createAppointment({
         id_cliente: user.idUsuario,
         id_administrador: form.id_administrador,
         id_reserva: form.id_reserva ? Number(form.id_reserva) : null,
         fecha_cita: fechaHora,
         motivo: form.motivo || "Medición de prenda",
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message);
+      const data = res.data;
       setCitas(prev => [data.data, ...prev]);
       setForm(f => ({ ...f, id_reserva: "", fecha_cita: "", hora_cita: "", motivo: "" }));
       setSuccess(true);

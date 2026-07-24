@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
-import { api } from "../utils/api";
+import { getUsers, createUser } from "../services/userService";
+import { getProducts } from "../services/productService";
+import { getInventory } from "../services/inventoryService";
 import "../styles/Dashboardad.css";
 
 function DashboardEmpleado() {
@@ -49,9 +51,9 @@ function DashboardEmpleado() {
     setLoading(true);
     try {
       const [usuariosRes, prendasRes, inventarioRes] = await Promise.all([
-        api.get("/api/usuarios"),
-        api.get("/api/prendas"),
-        api.get("/api/inventario"),
+        getUsers(),
+        getProducts(),
+        getInventory(),
       ]);
 
       const usuariosData = usuariosRes.data;
@@ -111,18 +113,13 @@ function DashboardEmpleado() {
 
     setSavingUser(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await api.post(
-        "/api/usuarios",
-        {
-          nombre: form.nombre.trim(),
-          documento: form.documento.trim(),
-          telefono: form.telefono.trim() || null,
-          correo: form.correo.trim().toLowerCase(),
-          Contrasena: form.Contrasena,
-        },
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-      );
+      const res = await createUser({
+        nombre: form.nombre.trim(),
+        documento: form.documento.trim(),
+        telefono: form.telefono.trim() || null,
+        correo: form.correo.trim().toLowerCase(),
+        Contrasena: form.Contrasena,
+      });
       const data = res.data;
       setUsuarios(prev => [data.data, ...prev]);
       setForm({ nombre: "", documento: "", telefono: "", correo: "", Contrasena: "", confirmar: "" });

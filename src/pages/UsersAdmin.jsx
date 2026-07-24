@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
 import ThemeToggle from "../components/ThemeToggle";
-import { api } from "../utils/api";
+import { getUsers, getRoles, createUser, updateUser, deleteUser } from "../services/userService";
 import "../styles/Dashboardad.css";
 
 const emptyForm = (roleId = "") => ({
@@ -42,12 +42,7 @@ function UsersAdmin() {
     const loadData = async () => {
       try {
         setLoading(true);
-        const token = localStorage.getItem("token");
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        const [rolesRes, usersRes] = await Promise.all([
-          api.get("/api/roles", { headers }),
-          api.get("/api/usuarios", { headers }),
-        ]);
+        const [rolesRes, usersRes] = await Promise.all([getRoles(), getUsers()]);
 
         const roleList = rolesRes.data?.data || [];
         const usersList = usersRes.data?.data || [];
@@ -85,7 +80,7 @@ function UsersAdmin() {
 
         if (userForm.documento.trim()) payload.documento = userForm.documento.trim();
 
-        const res = await api.post("/api/usuarios", payload, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+        const res = await createUser(payload);
         const data = res.data;
         setUsers((prev) => [data.data, ...prev]);
         setUserForm(emptyForm());
@@ -120,8 +115,7 @@ function UsersAdmin() {
   const handleDeleteUser = async (id) => {
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      await api.delete(`/api/usuarios/${id}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      await deleteUser(id);
       setUsers((prev) => prev.filter((user) => user.idUsuario !== id));
     } catch (error) {
       setFormError(error.message);
@@ -155,8 +149,7 @@ function UsersAdmin() {
         payload.Contrasena = editingUser.Contrasena;
       }
 
-      const token = localStorage.getItem("token");
-      const res = await api.put(`/api/usuarios/${editingUser.idUsuario}`, payload, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      const res = await updateUser(editingUser.idUsuario, payload);
       const data = res.data;
       setUsers((prev) => prev.map((user) => (user.idUsuario === editingUser.idUsuario ? data.data : user)));
       setEditingUser(null);

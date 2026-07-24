@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Footer from "../components/Footer";
-import { api } from "../utils/api";
+import { getProducts } from "../services/productService";
+import { getCategories } from "../services/categoryService";
 import { useTheme } from "../context/ThemeContext"; 
 import "../styles/dashboardUser.css";
 
@@ -41,8 +42,8 @@ function DashboardUser() {
     setLoading(true);
     try {
       const [prodRes, catRes] = await Promise.all([
-        api.get('/api/prendas'),
-        api.get('/api/categorias'),
+        getProducts(),
+        getCategories(),
       ]);
       const prodData = prodRes.data || prodRes;
       const catData = catRes.data || catRes;
