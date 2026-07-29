@@ -389,6 +389,7 @@ function UsersAdmin() {
                 </div>
                 <select
                   value={editingUser.idRol ? String(editingUser.idRol) : ""}
+                  onChange={(e) => setEditingUser({ ...editingUser, idRol: e.target.value })}
                   disabled={!((currentUser?.role || currentUser?.rol_nombre || "").toString().toLowerCase() === "admin")}
                   className="role-select"
                 >
