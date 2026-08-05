@@ -34,7 +34,7 @@ function DashboardUser() {
   const [selectedCantidad, setSelectedCantidad] = useState(1);
 
   // --- ESTADOS PARA LA NOTIFICACIÓN ESTILO APPLE ---
-  const [toast, setToast] = useState({ show: false, message: "" });
+  const [toast, setToast] = useState({ show: false, message: "", type: "success" });
   const [toastTimeoutId, setToastTimeoutId] = useState(null);
   const [duplicateConfirm, setDuplicateConfirm] = useState(false);
   const [pendingAddItems, setPendingAddItems] = useState([]);
@@ -162,21 +162,25 @@ function DashboardUser() {
     });
   };
 
+  // Muestra la notificación estilo Apple (éxito o error) y la oculta sola a los 3s
+  const showToast = (message, type = "success") => {
+    if (toastTimeoutId) clearTimeout(toastTimeoutId);
+    setToast({ show: true, message, type });
+    const newTimeout = setTimeout(() => {
+      setToast({ show: false, message: "", type });
+    }, 3000);
+    setToastTimeoutId(newTimeout);
+  };
+
   const addItemsToCart = (itemsToAdd) => {
     const cart = JSON.parse(localStorage.getItem("cart")) || [];
     cart.push(...itemsToAdd);
     localStorage.setItem("cart", JSON.stringify(cart));
-    setCartItems(cart);
 
-    if (toastTimeoutId) clearTimeout(toastTimeoutId);
     const addedTitle = itemsToAdd[0]?.title || modalProduct.nombre_prenda;
     const addedTalla = itemsToAdd[0]?.talla || selectedTalla;
     const addedCantidad = itemsToAdd.length;
-    setToast({ show: true, message: `"${addedTitle}" (Talla ${addedTalla}, Qty ${addedCantidad}) se agregó al carrito.` });
-    const newTimeout = setTimeout(() => {
-      setToast({ show: false, message: "" });
-    }, 3000);
-    setToastTimeoutId(newTimeout);
+    showToast(`"${addedTitle}" (Talla ${addedTalla}, Cantidad ${addedCantidad}) se agregó al carrito.`, "success");
 
     setDuplicateConfirm(false);
     setPendingAddItems([]);
@@ -186,11 +190,11 @@ function DashboardUser() {
 
   const confirmarAgregarCarrito = () => {
     if (!selectedTalla) {
-      alert("Por favor selecciona una talla.");
+      showToast("Por favor selecciona una talla.", "error");
       return;
     }
     if (selectedCantidad < 1) {
-      alert("La cantidad debe ser al menos 1.");
+      showToast("La cantidad debe ser al menos 1.", "error");
       return;
     }
 
@@ -208,9 +212,9 @@ function DashboardUser() {
 
     if (availableItems.length < selectedCantidad) {
       if (alreadyInCartCount > 0) {
-        alert(`Ya tienes ${alreadyInCartCount} unidad(es) de esta prenda en talla ${selectedTalla} en el carrito. Solo hay ${availableItems.length} unidad(es) adicionales disponibles.`);
+        showToast(`Ya tienes ${alreadyInCartCount} unidad(es) de esta prenda en talla ${selectedTalla} en el carrito. Solo hay ${availableItems.length} unidad(es) adicionales disponibles.`, "error");
       } else {
-        alert(`No hay suficientes unidades disponibles en talla ${selectedTalla}. Disponibles: ${availableItems.length}`);
+        showToast(`No hay suficientes unidades disponibles en talla ${selectedTalla}. Disponibles: ${availableItems.length}`, "error");
       }
       return;
     }
@@ -316,16 +320,24 @@ function DashboardUser() {
   return (
     <div className={`dashboard-page ${theme === "dark" ? "dark" : ""}`}>
       
-      {/* NOTIFICACIÓN ESTILO APPLE (Sutil y flotante) */}
-      <div className={`apple-notification-toast ${toast.show ? "show" : ""}`}>
+      {/* NOTIFICACIÓN ESTILO APPLE (Sutil y flotante) — verde en éxito, roja en error */}
+      <div className={`apple-notification-toast ${toast.show ? "show" : ""} ${toast.type === "error" ? "toast-error" : ""}`}>
         <div className="apple-toast-blur-bg"></div>
         <div className="apple-toast-inner">
           <div className="apple-toast-icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <circle cx="9" cy="21" r="1"></circle>
-              <circle cx="20" cy="21" r="1"></circle>
-              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-            </svg>
+            {toast.type === "error" ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+              </svg>
+            )}
           </div>
           <div className="apple-toast-info">
             <span className="apple-toast-app-name">RentStyle</span>
@@ -363,6 +375,92 @@ function DashboardUser() {
             </h2>
             <p>Descubre nuestros productos disponibles para ti</p>
           </div>
+        </div>
+
+        {/* Barra de búsqueda y filtros */}
+        <div className="filters-bar">
+          <div className="filter-search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input
+              type="text"
+              placeholder="Buscar prendas..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Buscar prendas"
+            />
+          </div>
+
+          <select
+            className="filter-select"
+            value={filterCategoria}
+            onChange={(e) => setFilterCategoria(e.target.value)}
+            aria-label="Filtrar por categoría"
+          >
+            <option value="">Todas las categorías</option>
+            {categories.map((c) => (
+              <option key={c.idCategoria} value={c.idCategoria}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="filter-select"
+            value={filterTalla}
+            onChange={(e) => setFilterTalla(e.target.value)}
+            aria-label="Filtrar por talla"
+          >
+            <option value="">Todas las tallas</option>
+            {tallas.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="filter-select"
+            value={filterColor}
+            onChange={(e) => setFilterColor(e.target.value)}
+            aria-label="Filtrar por color"
+          >
+            <option value="">Todos los colores</option>
+            {colores.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+
+          <input
+            type="number"
+            className="filter-number"
+            placeholder="Precio máx."
+            value={filterPrecioMax}
+            onChange={(e) => setFilterPrecioMax(e.target.value)}
+            min="0"
+            aria-label="Precio máximo"
+          />
+
+          <select
+            className="filter-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            aria-label="Ordenar por"
+          >
+            <option value="nombre">Nombre A-Z</option>
+            <option value="precio_asc">Precio: menor a mayor</option>
+            <option value="precio_desc">Precio: mayor a menor</option>
+          </select>
+
+          {hayFiltros && (
+            <button type="button" className="filter-clear-btn" onClick={clearFilters}>
+              Limpiar filtros ✕
+            </button>
+          )}
         </div>
 
         {/* Resultados */}
