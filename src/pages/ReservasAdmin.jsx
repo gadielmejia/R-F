@@ -87,7 +87,10 @@ function ReservasAdmin() {
   const filteredReservas = reservas.filter(r => {
     const matchEstado = filterEstado ? r.estado === filterEstado : true;
     const matchSearch = search
-      ? String(r.idReserva).includes(search) || r.observaciones?.toLowerCase().includes(search.toLowerCase())
+      ? String(r.idReserva).includes(search)
+        || r.observaciones?.toLowerCase().includes(search.toLowerCase())
+        || r.cliente?.nombre?.toLowerCase().includes(search.toLowerCase())
+        || r.detalles?.some(d => d.prenda?.nombre_prenda?.toLowerCase().includes(search.toLowerCase()))
       : true;
     return matchEstado && matchSearch;
   });
@@ -157,7 +160,7 @@ function ReservasAdmin() {
           <div className="dashboard-card">
             <h2>Reservas</h2>
             <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", flexWrap: "wrap" }}>
-              <input type="text" placeholder="Buscar por # o prendas..."
+              <input type="text" placeholder="Buscar por #, prenda o cliente..."
                 value={search} onChange={e => setSearch(e.target.value)}
                 style={{ flex: "1 1 200px", padding: "8px 12px", borderRadius: "8px", border: "1px solid #d1d5db" }} />
               <select value={filterEstado} onChange={e => setFilterEstado(e.target.value)}
@@ -188,10 +191,19 @@ function ReservasAdmin() {
                     return (
                       <tr key={r.idReserva}>
                         <td><strong>#{r.idReserva}</strong></td>
-                        <td>Usuario #{r.id_cliente}</td>
+                        <td>{r.cliente?.nombre || `Usuario #${r.id_cliente}`}</td>
                         <td>{r.fecha_evento}</td>
                         <td style={{ fontSize: "0.82rem" }}>{r.fecha_inicio}<br/>→ {r.fecha_fin}</td>
-                        <td style={{ fontSize: "0.82rem", maxWidth: "150px" }}>{r.observaciones || "—"}</td>
+                        <td style={{ fontSize: "0.82rem", maxWidth: "150px" }}>
+                          {r.detalles && r.detalles.length > 0
+                            ? r.detalles.map((d, i) => (
+                                <span key={i}>
+                                  {d.prenda?.nombre_prenda || d.inventario?.codigo_interno || `#${d.idInventario}`}
+                                  {i < r.detalles.length - 1 ? ", " : ""}
+                                </span>
+                              ))
+                            : r.observaciones || "—"}
+                        </td>
                         <td>
                           <span style={{ background: estilo.bg, color: estilo.color,
                             padding: "2px 10px", borderRadius: "10px", fontWeight: 600, fontSize: "0.82rem" }}>

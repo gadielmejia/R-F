@@ -101,20 +101,34 @@ function MisReservas() {
                 <div key={r.idReserva} className="dashboard-card" style={{ padding: "1.25rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "0.5rem" }}>
                     <div>
-                      <h3 style={{ margin: "0 0 0.5rem", color: "#1B5E20" }}>
-                        Reserva #{r.idReserva}
-                      </h3>
-                      <p style={{ margin: "0.2rem 0", color: "#374151" }}>
-                        <strong>Evento:</strong> {r.fecha_evento}
-                      </p>
-                      <p style={{ margin: "0.2rem 0", color: "#374151" }}>
-                        <strong>Período:</strong> {r.fecha_inicio} → {r.fecha_fin}
-                      </p>
-                      {r.observaciones && (
-                        <p style={{ margin: "0.2rem 0", color: "#6b7280", fontSize: "0.9rem" }}>
-                          <strong>Prendas:</strong> {r.observaciones}
-                        </p>
-                      )}
+                       <h3 style={{ margin: "0 0 0.5rem", color: "#1B5E20" }}>
+                         Reserva #{r.idReserva}
+                       </h3>
+                       <p style={{ margin: "0.2rem 0", color: "#374151" }}>
+                         <strong>Cliente:</strong> {r.cliente?.nombre || `Usuario #${r.id_cliente}`}
+                       </p>
+                       <p style={{ margin: "0.2rem 0", color: "#374151" }}>
+                         <strong>Evento:</strong> {r.fecha_evento}
+                       </p>
+                       <p style={{ margin: "0.2rem 0", color: "#374151" }}>
+                         <strong>Período:</strong> {r.fecha_inicio} → {r.fecha_fin}
+                       </p>
+                       {r.detalles && r.detalles.length > 0 && (
+                         <p style={{ margin: "0.2rem 0", color: "#6b7280", fontSize: "0.9rem" }}>
+                           <strong>Prendas:</strong>{" "}
+                           {r.detalles.map((d, i) => (
+                             <span key={i}>
+                               {d.prenda?.nombre_prenda || d.inventario?.codigo_interno || `Artículo #${d.idInventario}`}
+                               {i < r.detalles.length - 1 ? ", " : ""}
+                             </span>
+                           ))}
+                         </p>
+                       )}
+                       {r.observaciones && r.detalles.length === 0 && (
+                         <p style={{ margin: "0.2rem 0", color: "#6b7280", fontSize: "0.9rem" }}>
+                           <strong>Observaciones:</strong> {r.observaciones}
+                         </p>
+                       )}
                       <p style={{ margin: "0.2rem 0", color: "#6b7280", fontSize: "0.85rem" }}>
                         Registrada: {new Date(r.created_at).toLocaleDateString()}
                       </p>
