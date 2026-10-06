@@ -264,6 +264,9 @@ function InventoryAdmin() {
             <Link to={usersLink} className="nav-link">Usuarios</Link>
             <Link to={inventoryLink} className="nav-link">Inventario</Link>
             <Link to={reservasLink} className="dashboard-button">Gestión de reservas</Link>
+            {currentUser?.role === 'admin' && (
+              <Link to="/admin/reportes" className="nav-link">Reportes trimestrales</Link>
+            )}
             <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
