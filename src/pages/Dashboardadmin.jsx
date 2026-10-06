@@ -57,6 +57,11 @@ function DashboardAdmin() {
         <div className="nav-inner">
           <Link to="/dashboardadmin" className="brand">RentStyle</Link>
           <div className="nav-actions">
+            <Link to="/admin/productos" className="nav-link">Productos</Link>
+            <Link to="/admin/usuarios" className="nav-link">Usuarios</Link>
+            <Link to="/admin/inventario" className="nav-link">Inventario</Link>
+            <Link to="/admin/reservas" className="nav-link">Gestión de reservas</Link>
+            <Link to="/admin/reportes" className="nav-link">Reportes trimestrales</Link>
             <ThemeToggle />
             <button onClick={logout}>Cerrar sesión</button>
           </div>
@@ -84,6 +89,7 @@ function DashboardAdmin() {
           <Link to="/admin/usuarios" className="dashboard-button">Gestión de usuarios</Link>
           <Link to="/admin/inventario" className="dashboard-button">Inventario</Link>
           <Link to="/admin/reservas" className="dashboard-button">Gestión de reservas</Link>
+          <Link to="/admin/reportes" className="dashboard-button">Reportes trimestrales</Link>
         </div>
       </div>
 

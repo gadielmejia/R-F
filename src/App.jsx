@@ -14,6 +14,7 @@ import Profile from "./pages/Profile";
 import Citas from "./pages/Citas";
 import AgendarCita from "./pages/AgendarCita";
 import MisReservas from "./pages/MisReservas";
+import ReportesAdmin from "./pages/ReportesAdmin";
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/admin/usuarios" element={<UsersAdmin />} />
         <Route path="/admin/inventario" element={<InventoryAdmin />} />
         <Route path="/admin/reservas" element={<ReservasAdmin />} />
+        <Route path="/admin/reportes" element={<ReportesAdmin />} />
         <Route path="/empleado/productos" element={<ProductsAdmin />} />
         <Route path="/empleado/usuarios" element={<UsersAdmin />} />
         <Route path="/empleado/inventario" element={<InventoryAdmin />} />
