@@ -230,6 +230,178 @@ body.dark .hero-tag{
   margin-bottom:40px;
 }
 
+.section-header h2{
+  font-size:1.75rem;
+  margin-bottom:0.5rem;
+}
+
+.products-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:25px;
+}
+
+.card{
+  background:var(--surface);
+  border-radius:20px;
+  padding:20px;
+}
+
+.card img{
+  height:350px;
+  object-fit:cover;
+  border-radius:20px;
+}
+
+.card h3{
+  margin-top:15px;
+}
+
+.card p{
+  margin-top:10px;
+}
+
+/* ESTILOS INICIO (usuarios no registrados) */
+.inicio-page{
+  min-height:100vh;
+  background:var(--bg);
+}
+
+.product-card-image{
+  height:260px;
+  overflow:hidden;
+  border-radius:16px;
+  background:#f3f7f4;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:12px;
+}
+
+.product-card-image img{
+  height:100%;
+  width:100%;
+  object-fit:cover;
+}
+
+.product-card-image-empty{
+  font-size:3rem;
+}
+
+.product-card-content{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.product-meta-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:8px;
+}
+
+/* Modal de autenticación requerido */
+.auth-modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.55);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:2000;
+  backdrop-filter:blur(4px);
+  padding:20px;
+}
+
+.auth-modal-card{
+  background:var(--surface);
+  border-radius:24px;
+  padding:32px;
+  width:100%;
+  max-width:420px;
+  text-align:center;
+  box-shadow:0 20px 40px rgba(0,0,0,0.25);
+  position:relative;
+  animation:modalSlide 0.25s ease-out;
+}
+
+@keyframes modalSlide{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+.auth-modal-close{
+  position:absolute;
+  top:14px;
+  right:16px;
+  background:none;
+  border:none;
+  font-size:1.75rem;
+  line-height:1;
+  cursor:pointer;
+  color:var(--text-muted);
+  padding:4px;
+}
+
+.auth-modal-close:hover{
+  color:var(--text);
+}
+
+.auth-modal-icon{
+  font-size:3rem;
+  margin-bottom:1rem;
+}
+
+.auth-btn{
+  padding:12px 18px;
+  border-radius:12px;
+  border:none;
+  font-weight:600;
+  font-size:1rem;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.auth-btn-login{
+  background:var(--primary-dark);
+  color:#fff;
+}
+
+.auth-btn-login:hover{
+  background:var(--primary);
+}
+
+.auth-btn-register{
+  background:transparent;
+  border:2px solid var(--primary-dark);
+  color:var(--primary-dark);
+}
+
+.auth-btn-register:hover{
+  background:rgba(31,125,52,0.08);
+}
+
+body.dark .auth-modal-card{
+  background:var(--surface);
+  color:var(--text);
+  border:1px solid rgba(255,255,255,.06);
+}
+
+body.dark .auth-modal-close:hover{
+  color:var(--text);
+}
+
+body.dark .auth-btn-register{
+  border-color:var(--text);
+  color:var(--text);
+}
+
+.section-header{
+  text-align:center;
+  margin-bottom:40px;
+}
+
 .products-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
